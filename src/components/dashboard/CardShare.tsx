@@ -1,0 +1,478 @@
+"use client";
+import React, { useCallback, useMemo } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import {
+  Share2,
+  Copy,
+  Mail,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Twitter,
+  MessageCircle,
+} from "lucide-react";
+import { BusinessCard } from "@/types/businessCard";
+import { getFullName } from "@/utils/businessCard";
+import { useToast } from "@/contexts/ToastContext";
+interface CardShareProps {
+  card: BusinessCard;
+  cardId: string;
+  qrCodeUrl: string;
+}
+import { loadBusinessCards } from "@/utils/cardStorage";
+const STORAGE_KEY = "business_cards";
+
+export function CardShare({ card, cardId, qrCodeUrl }: CardShareProps) {
+  const { showToast } = useToast();
+  // const handleCopyLink = () => {
+  //   if (typeof window !== "undefined") {
+  //     const shareUrl = `${window.location.origin}/card/${cardId}`;
+  //     navigator.clipboard.writeText(shareUrl).then(() => {
+  //      showToast("The card link has been copied to your clipboard.", "success");
+  //     });
+  //   }
+  // };
+
+  const externalLink = useMemo(() => {
+    if (typeof window !== "undefined") {
+      let selectedTab = "favorites";
+      const localCards = loadBusinessCards();
+      const selectedCard = localCards.find((c) => c.metadata.id === cardId);
+      if (selectedCard) {
+        selectedTab = "local";
+      } else {
+        selectedTab = "favorites";
+      }
+      return `${window.location.origin}/card/${cardId}?selectedTab=${selectedTab}&view=true`;
+    }
+    return "";
+  }, [cardId]);
+
+  const handleViewClick = useCallback(() => {
+    if (externalLink) {
+      navigator.clipboard.writeText(externalLink).then(() => {
+        showToast(
+          "The card link has been copied to your clipboard.",
+          "success"
+        );
+      });
+
+      //window.open(externalLink, "_blank");
+    }
+  }, [externalLink]);
+
+  const handleCopyLink = () => {
+    if (typeof window !== "undefined") {
+      try {
+        const storedCards = localStorage.getItem(STORAGE_KEY);
+        const parsedCards = JSON.parse(storedCards) || [];
+        const isLocalCard = parsedCards.some(
+          (card) => card.metadata?.id === cardId
+        );
+
+        if (isLocalCard) {
+          showToast(
+            "This card is stored locally on your device and cannot be shared with others",
+            "error"
+          );
+          return;
+        }
+
+        const shareUrl = `${window.location.origin}/card/${cardId}`;
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showToast(
+            "The card link has been copied to your clipboard.",
+            "success"
+          );
+        });
+      } catch (error) {
+        console.error("Error handling copy link:", error);
+      }
+    }
+  };
+
+  const handleDownloadQR = async () => {
+    if (!qrCodeUrl) return;
+
+    try {
+      const fileName = `${getFullName(card)}-qr-code.png`;
+      const apiUrl = `/api/download-qr?url=${encodeURIComponent(
+        qrCodeUrl
+      )}&name=${encodeURIComponent(fileName)}`;
+
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error("Failed to download QR code");
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast("The QR code has been saved to your device.", "success");
+    } catch (error) {
+      console.error("Error downloading QR code:", error);
+      showToast("Failed to download QR code", "error");
+    }
+  };
+
+  const handleDownloadImage = async () => {
+    const previewElement = document.querySelector(
+      ".card-preview"
+    ) as HTMLElement;
+
+    if (!previewElement) {
+      showToast("Unable to find card preview", "error");
+      return;
+    }
+
+    try {
+      await document.fonts.ready;
+      await Promise.all(
+        Array.from(document.images)
+          .filter((img) => !img.complete)
+          .map(
+            (img) =>
+              new Promise((resolve) => (img.onload = img.onerror = resolve))
+          )
+      );
+
+      const clone = previewElement.cloneNode(true) as HTMLElement;
+
+      // Disable transitions/animations
+      clone.querySelectorAll("*").forEach((el) => {
+        const elem = el as HTMLElement;
+        elem.style.transition = "none";
+        elem.style.animation = "none";
+      });
+
+      // Replace Firebase images with proxy URLs
+      const images = clone.querySelectorAll("img");
+      images.forEach((img) => {
+        if (img.src.startsWith("https://firebasestorage.googleapis.com")) {
+          const bust = Date.now(); // unique timestamp each call
+          img.src = `/api/proxy-image?url=${encodeURIComponent(
+            img.src
+          )}&t=${bust}`;
+        }
+      });
+
+      // Offscreen container
+      const container = document.createElement("div");
+      container.style.position = "fixed";
+      container.style.top = "-9999px";
+      container.style.left = "-9999px";
+      container.style.width = "0";
+      container.style.height = "0";
+      container.style.overflow = "hidden";
+      container.style.opacity = "0";
+      container.style.pointerEvents = "none";
+      container.style.zIndex = "-9999";
+
+      clone.style.position = "relative";
+      clone.style.width = `${previewElement.scrollWidth}px`;
+      clone.style.height = `${previewElement.scrollHeight}px`;
+      clone.style.overflow = "visible";
+      clone.style.background = "#ffffff";
+      clone.style.transform = "none";
+      clone.style.scale = "1";
+      clone.style.opacity = "1";
+      // clone.style.borderRadius = "20px";
+      clone.style.overflow = "hidden";
+
+      container.appendChild(clone);
+      document.body.appendChild(container);
+      await new Promise((r) => requestAnimationFrame(r));
+
+      const htmlToImage = await import("html-to-image");
+      const dataUrl = await htmlToImage.toPng(clone, {
+        cacheBust: true,
+        backgroundColor: "#ffffff",
+        pixelRatio: 2,
+        quality: 1,
+        style: {
+          width: `${previewElement.scrollWidth}px`,
+          height: `${previewElement.scrollHeight}px`,
+          transform: "none",
+          overflow: "visible",
+          // borderRadius: "60px",
+        },
+      });
+
+      container.remove();
+
+      // Add footer
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => (img.onload = resolve));
+
+      const finalCanvas = document.createElement("canvas");
+      const ctx = finalCanvas.getContext("2d");
+      const footerHeight = 40;
+      const borderRadius = 20;
+
+      finalCanvas.width = img.width;
+      finalCanvas.height = img.height + footerHeight;
+
+      if (ctx) {
+        // Create rounded path for entire card (image + footer)
+        ctx.beginPath();
+        ctx.moveTo(borderRadius, 0);
+        ctx.lineTo(finalCanvas.width - borderRadius, 0);
+        ctx.quadraticCurveTo(
+          finalCanvas.width,
+          0,
+          finalCanvas.width,
+          borderRadius
+        );
+        ctx.lineTo(finalCanvas.width, finalCanvas.height - borderRadius);
+        ctx.quadraticCurveTo(
+          finalCanvas.width,
+          finalCanvas.height,
+          finalCanvas.width - borderRadius,
+          finalCanvas.height
+        );
+        ctx.lineTo(borderRadius, finalCanvas.height);
+        ctx.quadraticCurveTo(
+          0,
+          finalCanvas.height,
+          0,
+          finalCanvas.height - borderRadius
+        );
+        ctx.lineTo(0, borderRadius);
+        ctx.quadraticCurveTo(0, 0, borderRadius, 0);
+        ctx.closePath();
+        ctx.clip();
+
+        // White background fills *within* rounded area only
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+        // Draw the main image
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+
+        // Footer background (still inside the same clip)
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, img.height, finalCanvas.width, footerHeight);
+
+        // Footer text
+        ctx.fillStyle = "rgba(102, 102, 102, 0.7)";
+        ctx.font = "italic 22px Arial, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(
+          "Created free by: https://solobizcards.com",
+          finalCanvas.width / 2,
+          img.height + footerHeight / 2
+        );
+      }
+
+      const link = document.createElement("a");
+      link.download = `${card.profile.firstName || "business"}-${
+        card.profile.lastName || "card"
+      }.png`;
+      link.href = finalCanvas.toDataURL("image/png");
+      link.click();
+
+      showToast("Business card image downloaded successfully", "success");
+    } catch (error) {
+      console.error("Error generating image:", error);
+      showToast("Failed to generate image", "error");
+    }
+  };
+
+  const handleSocialShare = (platform: string) => {
+    if (typeof window !== "undefined") {
+      const storedCards = localStorage.getItem(STORAGE_KEY);
+      const parsedCards = JSON.parse(storedCards) || [];
+      const isLocalCard = parsedCards.some(
+        (card) => card.metadata?.id === cardId
+      );
+
+      if (isLocalCard) {
+        showToast(
+          "This card is stored locally on your device and cannot be shared with others",
+          "error"
+        );
+        return;
+      }
+
+      const shareUrl = `${window.location.origin}/card/${cardId}`;
+      const text = `Check out ${getFullName(card)}'s business card`;
+
+      let url = "";
+      switch (platform) {
+        case "facebook":
+          url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+            shareUrl
+          )}`;
+          break;
+        case "instagram":
+          navigator.clipboard
+            .writeText(`${shareUrl} ${process.env.NEXT_PUBLIC_API_LIVE_URL}`)
+            .then(() => {
+              alert(
+                "Text copied to clipboard! You can now paste it in your Instagram post or story."
+              );
+            });
+          break;
+        case "twitter":
+          url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+            shareUrl
+          )}&text=${encodeURIComponent(text)}`;
+          break;
+        case "linkedin":
+          url = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+            shareUrl
+          )}`;
+          break;
+        case "whatsapp":
+          url = `https://wa.me/?text=${encodeURIComponent(
+            text + " " + shareUrl
+          )}`;
+          break;
+        case "email":
+          url = `mailto:?subject=${encodeURIComponent(
+            text
+          )}&body=${encodeURIComponent(shareUrl)}`;
+          break;
+        case "text":
+          // For text/SMS sharing - using SMS protocol
+          url = `sms:?body=${encodeURIComponent(text + " " + shareUrl)}`;
+          break;
+      }
+
+      if (url) {
+        window.open(url, "_blank");
+      }
+    }
+  };
+
+  return (
+    <Card className="lg:col-span-4 border border-gray-200 hover:border-gray-400 hover:shadow-md transition-all">
+      <CardHeader>
+        <CardTitle className="text-lg">Share Your Cards</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* QR Code Section */}
+          <div className="border border-gray-200 rounded-lg p-6 flex flex-col h-full">
+            {qrCodeUrl && (
+              <div className="text-center space-y-4 flex flex-col h-full">
+                <p className="text-sm text-muted-foreground">Scan to share:</p>
+                <div className="inline-block p-4 bg-white rounded-lg border border-gray-100 flex-grow flex items-center justify-center">
+                  <img src={qrCodeUrl} alt="QR Code" className="w-32 h-32" />
+                </div>
+                <div className="flex gap-8">
+                  <Button
+                    variant="outline"
+                    className="w-full mt-auto"
+                    style={{ backgroundColor: card.brandColor, color: "white" }}
+                    onClick={handleDownloadQR}
+                  >
+                    Download QR Code
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full mt-auto"
+                    style={{ backgroundColor: card.brandColor, color: "white" }}
+                    onClick={handleDownloadImage}
+                  >
+                    Download Image
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Social Links Section */}
+          <div className="border border-gray-200 rounded-lg p-6 space-y-4">
+            <p className="text-sm text-muted-foreground text-center">
+              Copy the link below to share your card:
+            </p>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleViewClick}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Link
+            </Button>
+
+            <Separator />
+
+            <p className="text-sm text-muted-foreground text-center">
+              Or share via
+            </p>
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSocialShare("email")}
+                className="flex items-center justify-start gap-2 p-3"
+              >
+                <Mail className="h-4 w-4" />
+                <span className="text-xs">Email</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSocialShare("text")}
+                className="flex items-center justify-start gap-2 p-3"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span className="text-xs">Text</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSocialShare("facebook")}
+                className="flex items-center justify-start gap-2 p-3"
+              >
+                <Facebook className="h-4 w-4" />
+                <span className="text-xs">Facebook</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSocialShare("instagram")}
+                className="flex items-center justify-start gap-2 p-3"
+              >
+                <Instagram className="h-4 w-4" />
+                <span className="text-xs">Instagram</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSocialShare("linkedin")}
+                className="flex items-center justify-start gap-2 p-3"
+              >
+                <Linkedin className="h-4 w-4" />
+                <span className="text-xs">LinkedIn</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleSocialShare("twitter")}
+                className="flex items-center justify-start gap-2 p-3"
+              >
+                <Twitter className="h-4 w-4" />
+                <span className="text-xs">Twitter/X</span>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}

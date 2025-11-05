@@ -1,0 +1,473 @@
+"use client";
+
+import { useSearchParams, useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { loadStripe } from "@stripe/stripe-js";
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
+import { useToast } from "@/contexts/ToastContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { db, auth } from "@/services/firebase";
+import {
+  arrayUnion,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { FaStripe, FaPaypal } from "react-icons/fa";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
+);
+
+const CheckoutForm = ({ plan, price, billing, userId, setIsLoading }: any) => {
+  const { showToast } = useToast();
+  const stripe = useStripe();
+  const elements = useElements();
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const [form, setForm] = useState({
+    email: "",
+    fullName: "",
+    country: "India",
+    address: "",
+    agreeTerms: false,
+  });
+
+  const [paymentMethod, setPaymentMethod] = useState<"stripe" | "paypal">(
+    "stripe"
+  );
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const target = e.target as HTMLInputElement | HTMLSelectElement;
+    const { name, value, type } = target;
+    const checked = (target as HTMLInputElement).checked;
+    setForm({ ...form, [name]: type === "checkbox" ? checked : value });
+  };
+
+  const handlePaymentMethodChange = (method: "stripe" | "paypal") => {
+    setPaymentMethod(method);
+  };
+
+  const handleReferralsEarning = async () => {
+    const userRef = doc(db, "users", userId);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const userData = userSnap.data();
+      const referralCode = userData?.referredBy;
+      let parentUid: string | null = null;
+      let grandParentUid: string | null = null;
+
+      if (referralCode) {
+        const refeQuery = query(
+          collection(db, "referrals"),
+          where("referralCode", "==", referralCode)
+        );
+        const refeSnap = await getDocs(refeQuery);
+
+        if (!refeSnap.empty) {
+          const parentRefDoc = refeSnap.docs[0];
+          const parentRefData = parentRefDoc.data();
+          parentUid = parentRefData.uid;
+
+          let childEarnings = 0;
+          let grandchildEarnings = 0;
+          let operatingCostRate = 0;
+
+          const settingsRef = doc(db, "users", user?.uid);
+
+          const pricingRequirement = doc(db, "settings", "PricingRequirement");
+          const snapPricingRequirement = await getDoc(pricingRequirement);
+          if (snapPricingRequirement.exists()) {
+            operatingCostRate = snapPricingRequirement.data().proUpgradePerYear;
+          }
+
+          const snap1 = await getDoc(settingsRef);
+          if (snap1.exists()) {
+            childEarnings = snap1.data().userChildEarning;
+            grandchildEarnings = snap1.data().userGrandChildEarning;
+          }
+          let childBalanceEarnings = parentRefData.childBalanceEarnings || {};
+          let balanceEarnings = parentRefData.balanceEarnings || {};
+          let earningsCost = parentRefData.earningsCost || {};
+
+          const earningAmount =
+            (Number(operatingCostRate) * Number(childEarnings)) / 100;
+
+          // Create a clean object to avoid prototype pollution or undefined keys
+          childBalanceEarnings = {
+            ...childBalanceEarnings,
+            [user.uid]: (childBalanceEarnings[user.uid] || 0) + earningAmount,
+          };
+          balanceEarnings = {
+            ...balanceEarnings,
+            [user.uid]: (balanceEarnings[user.uid] || 0) + earningAmount,
+          };
+          earningsCost = {
+            ...earningsCost,
+            [user.uid]: childEarnings,
+          };
+          await updateDoc(parentRefDoc.ref, {
+            balanceEarnings,
+          });
+
+          if (parentRefData.parentUid) {
+            grandParentUid = parentRefData.parentUid;
+            const gpRef = doc(db, "referrals", grandParentUid);
+            const gpSnap = await getDoc(gpRef);
+
+            if (gpSnap.exists()) {
+              const gpData = gpSnap.data();
+              let balanceEarnings = gpData.balanceEarnings || {};
+
+              let earningsCost = gpData.earningsCost || {};
+
+              let parentBalanceEarnings = gpData.parentBalanceEarnings || {};
+
+              const earningAmount =
+                (Number(operatingCostRate) * Number(grandchildEarnings)) / 100;
+
+              // Create a clean object to avoid prototype pollution or undefined keys
+              parentBalanceEarnings = {
+                ...parentBalanceEarnings,
+                [user.uid]:
+                  (childBalanceEarnings[user.uid] || 0) + earningAmount,
+              };
+              balanceEarnings = {
+                ...balanceEarnings,
+                [user.uid]: (balanceEarnings[user.uid] || 0) + earningAmount,
+              };
+              earningsCost = {
+                ...earningsCost,
+                [user.uid]: grandchildEarnings,
+              };
+
+              await updateDoc(gpRef, {
+                balanceEarnings,
+              });
+            }
+          }
+        }
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.agreeTerms) {
+      showToast("Please agree to the Terms and Conditions!", "error");
+      return;
+    }
+
+    if (!userId) {
+      showToast("User not logged in", "error");
+      return;
+    }
+
+    if (paymentMethod === "stripe") {
+      if (!stripe || !elements) return;
+      setLoading(true);
+
+      try {
+        const res = await fetch("/api/create-subscription", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId,
+            plan,
+            price: parseFloat(price),
+            billing,
+            action: "create",
+          }),
+        });
+
+        const { clientSecret, error } = await res.json();
+        if (error) throw new Error(error);
+        if (!clientSecret) throw new Error("Failed to get client secret");
+
+        const cardElement = elements.getElement(CardElement);
+        if (!cardElement) return;
+
+        const paymentResult = await stripe.confirmCardPayment(clientSecret, {
+          payment_method: {
+            card: cardElement,
+            billing_details: {
+              name: form.fullName,
+              email: form.email,
+              address: { line1: form.address },
+            },
+          },
+        });
+
+        if (paymentResult.error) {
+          showToast(paymentResult.error.message || "Payment failed", "error");
+          return;
+        }
+
+        if (paymentResult.paymentIntent?.status === "succeeded") {
+          handleReferralsEarning();
+          setIsLoading(false);
+          showToast("Subscription activated successfully!", "success");
+          router.push("/dashboard");
+        }
+      } catch (err: any) {
+        console.error(err);
+        showToast(err.message || "Subscription failed", "error");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      showToast("PayPal payment will be implemented later.", "info");
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-8 shadow-lg w-full lg:w-2/3 border border-gray-100">
+      {/* Heading */}
+      <h1 className="text-3xl font-extrabold mb-2 text-gray-900">Checkout</h1>
+      <p className="text-gray-500 mb-8">Complete your subscription below.</p>
+
+      <Button
+        variant="outline"
+        className="mb-6 hover:bg-gray-100 transition"
+        onClick={() => history.back()}
+      >
+        &larr; Back
+      </Button>
+
+      {/* Payment method */}
+      <div className="mb-8">
+        <p className="font-semibold mb-3 text-gray-800">
+          Select Payment Method
+        </p>
+        <div className="flex gap-4">
+          {/* Stripe */}
+          <label
+            className={`flex-1 p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-sm ${
+              paymentMethod === "stripe"
+                ? "border-indigo-600 bg-indigo-50"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="stripe"
+              checked={paymentMethod === "stripe"}
+              onChange={() => handlePaymentMethodChange("stripe")}
+              className="hidden"
+            />
+            <div className="flex items-center gap-3">
+              <FaStripe className="text-indigo-600 text-2xl" />
+              <div>
+                <p className="font-semibold text-gray-800">Stripe</p>
+                <p className="text-gray-500 text-sm">Pay with card</p>
+              </div>
+            </div>
+          </label>
+
+          {/* PayPal */}
+          {/* <label
+            className={`flex-1 p-4 rounded-xl border-2 cursor-pointer transition-all hover:shadow-sm ${
+              paymentMethod === "paypal"
+                ? "border-indigo-600 bg-indigo-50"
+                : "border-gray-200 bg-white"
+            }`}
+          >
+            <input
+              type="radio"
+              name="paymentMethod"
+              value="paypal"
+              checked={paymentMethod === "paypal"}
+              onChange={() => handlePaymentMethodChange("paypal")}
+              className="hidden"
+            />
+            <div className="flex items-center gap-3">
+              <FaPaypal className="text-blue-600 text-2xl" />
+              <div>
+                <p className="font-semibold text-gray-800">PayPal</p>
+                <p className="text-gray-500 text-sm">Coming Soon</p>
+              </div>
+            </div>
+          </label> */}
+        </div>
+      </div>
+
+      {/* Form */}
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        <div>
+          <label
+            className="block text-gray-700 mb-1 font-medium"
+            htmlFor="email"
+          >
+            Email
+          </label>
+          <input
+            type="email"
+            name="email"
+            placeholder="you@example.com"
+            value={form.email}
+            onChange={handleChange}
+            required
+            className="w-full border-gray-300 p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-gray-300 p-4 rounded-lg bg-gray-50"
+          />
+        </div>
+
+        <div>
+          <label
+            className="block text-gray-700 mb-1 font-medium"
+            htmlFor="fullName"
+          >
+            Full Name
+          </label>
+          <input
+            type="text"
+            name="fullName"
+            placeholder="John Doe"
+            value={form.fullName}
+            onChange={handleChange}
+            required
+            className="w-full border-gray-300 p-3 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 border border-gray-300 p-4 rounded-lg bg-gray-50"
+          />
+        </div>
+
+        {paymentMethod === "stripe" && (
+          <div>
+            <label className="block text-gray-700 mb-1 font-medium">
+              Card Details
+            </label>
+            <div className="border border-gray-300 p-4 rounded-lg bg-gray-50">
+              <CardElement options={{ hidePostalCode: true }} />
+            </div>
+          </div>
+        )}
+
+        {/* Terms */}
+        <label className="flex items-center gap-2 mt-4 text-gray-700">
+          <input
+            type="checkbox"
+            name="agreeTerms"
+            checked={form.agreeTerms}
+            onChange={handleChange}
+            required
+            className="accent-indigo-600"
+          />
+          I agree to the{" "}
+          <a href="/terms" className="text-indigo-600 font-medium underline">
+            Terms and Conditions
+          </a>
+        </label>
+
+        {/* Button */}
+        <Button
+          type="submit"
+          className="w-full h-12 rounded-xl text-lg font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-md"
+          disabled={loading}
+        >
+          {loading
+            ? "Processing..."
+            : `Pay $${price} with ${
+                paymentMethod === "stripe" ? "Stripe" : "PayPal"
+              }`}
+        </Button>
+      </form>
+    </div>
+  );
+};
+
+const CheckoutPage = () => {
+  const searchParams = useSearchParams();
+  const plan = searchParams.get("plan") || "Pro";
+  const price = searchParams.get("price") || "72.00";
+  const billing = searchParams.get("billing") || "annual";
+  const router = useRouter();
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await getDoc(doc(db, "users", user.uid));
+        setUserId(user.uid);
+      } else {
+        setUserId(null);
+        setTimeout(() => router.replace("/"), 1000);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+  const [isLoading, setIsLoading] = useState(false);
+  const calculatedPrice =
+    billing === "annual" ? (parseFloat(price) * 12).toFixed(2) : price;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+  return (
+    <Elements stripe={stripePromise}>
+      <div className="min-h-screen bg-gray-50 py-12 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
+          {/* Checkout form */}
+          <CheckoutForm
+            plan={plan}
+            price={calculatedPrice}
+            billing={billing}
+            userId={userId}
+            setIsLoading={setIsLoading}
+          />
+
+          {/* Order Summary */}
+          <div className="w-full lg:w-1/3 bg-white rounded-2xl p-8 shadow-lg border border-gray-100 sticky top-24 self-start">
+            <h2 className="text-2xl font-bold mb-6 text-gray-900">
+              Order Summary
+            </h2>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="font-semibold text-gray-900 text-lg">{plan}</p>
+                  <p className="text-gray-500">
+                    {billing === "annual"
+                      ? "Yearly Billing"
+                      : "Monthly Billing"}
+                  </p>
+                </div>
+                <p className="font-semibold text-indigo-600 text-lg">
+                  ${calculatedPrice}
+                </p>
+              </div>
+
+              <div className="border-t pt-4 space-y-2">
+                <div className="flex justify-between text-gray-700">
+                  <span className="text-lg">Subtotal</span>
+                  <span className="text-lg">${calculatedPrice}</span>
+                </div>
+                <div className="flex justify-between font-bold text-2xl text-gray-900">
+                  <span>Order Total</span>
+                  <span>${calculatedPrice}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Elements>
+  );
+};
+
+export default CheckoutPage;
