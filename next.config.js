@@ -4,7 +4,7 @@ const nextConfig = {
     domains: [
       "localhost",
       "firebasestorage.googleapis.com",
-      "media-clock.firebasestorage.app",
+      "solobizcards-db.firebasestorage.app",
     ],
   },
   eslint: {
