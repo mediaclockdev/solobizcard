@@ -12,7 +12,6 @@ node_modules
 dist
 dist-ssr
 *.local
-media-clock-firebase-adminsdk-fbsvc-cf5c669b81*
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
