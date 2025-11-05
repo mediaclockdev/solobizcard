@@ -787,7 +787,8 @@ export default function Referrals() {
     {
       title: "Grand-children Referrals",
       value: parentCount,
-      required: remainingGrandChildren,
+      required: 10000,
+      average: `See Income Calculater for actual numbers`,
     },
   ];
 
