@@ -63,7 +63,7 @@ export function MobileCardLayout({
   const [customButtonText, setCustomButtonText] = useState("");
   const [localMessage, setLocalMessage] = useState("");
   const [showBackButton, setShowBackButton] = useState(true);
-  const [userName,setUserName]=useState('');
+  const [userName, setUserName] = useState("");
   const [refLink, setRefLink] = useState("");
   const router = useRouter();
 
@@ -161,6 +161,20 @@ export function MobileCardLayout({
 
   // Modal sequence handlers
   const handleCloseShareModal = () => {
+    if (user.planType === "free" && !isTrialActive) {
+        setShareModalAnimateClass("translate-y-full");
+      setTimeout(() => {
+        setShowShareModal(false);
+        setTimeout(() => {
+          handleCloseContactModal();
+          setTimeout(() => {
+            setContactModalAnimateClass("translate-y-0");
+          }, 500);
+        }, 200);
+      }, 700);
+
+      return;
+    }
     setShareModalAnimateClass("translate-y-full");
     setTimeout(() => {
       setShowShareModal(false);
@@ -173,11 +187,25 @@ export function MobileCardLayout({
     }, 700);
   };
 
+  function parseCreatedAt(input) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
+  const createdAt = parseCreatedAt(user.createdAt);
+  const trialEnd = new Date(
+    createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+  );
+  const isTrialActive = new Date() <= trialEnd;
+
   const handleCloseContactModal = () => {
     setContactModalAnimateClass("translate-y-full");
     setTimeout(() => {
       setShowContactModal(false);
-      setUserName('')
+      setUserName("");
       setCustomMessage(
         "Hey, want your own digital biz card like this? Grab one now, it just takes 2 minutes."
       );
@@ -256,7 +284,7 @@ export function MobileCardLayout({
 
     // Show thank you popup after download
     setTimeout(() => {
-      setUserName(card.profile?.firstName)
+      setUserName(card.profile?.firstName);
       setCustomMessage(
         `${
           card.profile?.firstName || "Contact"
@@ -300,7 +328,7 @@ export function MobileCardLayout({
     setTimeout(() => {
       setShowThankYouModal(false);
       setCustomMessage("");
-            setUserName('')
+      setUserName("");
       setCustomTitle("");
       setCustomButtonText("");
       setThankYouAnimateClass("translate-y-0");
@@ -315,7 +343,7 @@ export function MobileCardLayout({
       return;
     }
     setShowShareModal(true);
-          setUserName('')
+    setUserName("");
   };
 
   const navigateBack = () => {

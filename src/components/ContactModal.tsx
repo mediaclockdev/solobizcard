@@ -419,7 +419,7 @@ export function ContactModal({
   };
 
   const handleSendContact = async () => {
-    if (!user || user.planType == "free") {
+    if (!user || user.planType == "free" && !isTrialActive) {
       setShowWarning(true);
       return;
     }
@@ -483,6 +483,7 @@ export function ContactModal({
         </div>
 
         {/* Content */}
+        
         <div className="overflow-y-auto rounded-t-3xl max-h-[calc(98dvh-4rem)] pt-16 pb-6">
           <div className="px-6">
             <h2 className="text-center text-xl font-semibold mb-2">
@@ -492,14 +493,14 @@ export function ContactModal({
 
             {mode === "select" && (
               <div className="space-y-4">
-                <Button
+                {/* <Button
                   onClick={handleScanCard}
                   className="w-full flex items-center justify-center gap-2"
                   variant="outline"
                 >
                   <Camera size={20} />
                   Scan Paper Biz Card
-                </Button>
+                </Button> */}
 
                 {user.planType === "free" && !isTrialActive ? null : (
                   <Button
@@ -711,6 +712,7 @@ export function ContactModal({
             )}
           </div>
         </div>
+        
       </div>
       {showPermissionModal && (
         <div

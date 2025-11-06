@@ -1414,7 +1414,7 @@ export default function Referrals() {
                   [ {enrichedReferrals.length} ]
                 </span>
                 {/* "More >" button */}
-                {enrichedReferrals.length > 10 && (
+                {enrichedReferrals.length > 1 && (
                   <span
                     className="!ml-[15px] text-sm font-medium text-blue-600 cursor-pointer"
                     onClick={() => setIsModalOpen(true)}
