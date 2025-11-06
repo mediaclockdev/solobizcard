@@ -1390,17 +1390,17 @@ export default function UsersListing() {
                 </h1>
                 <p>
                   <strong>Child affiliate earnings after monetization :</strong>{" "}
-                  {selectedUser.userChildEarning}
+                  {selectedUser.userChildEarning}%
                 </p>
                 <p>
                   <strong>
                     Grandchild affiliate earnings after monetization :
                   </strong>{" "}
-                  {selectedUser.userGrandChildEarning}
+                  {selectedUser.userGrandChildEarning}%
                 </p>
                 <p>
                   <strong>Member's operating cost deduction rate :</strong>{" "}
-                  {selectedUser.operatingCostRate}
+                  {selectedUser.operatingCostRate}%
                 </p>
               </div>
 
@@ -1486,7 +1486,7 @@ export default function UsersListing() {
                 <h1 className="font-bold underline mt-5 mb-2">
                   Others Information :
                 </h1>
-                {selectedUser.userChildEarning && (
+                {/* {selectedUser.userChildEarning && (
                   <p>
                     <strong>Child Earning :</strong>{" "}
                     {selectedUser.userChildEarning}%
@@ -1497,7 +1497,7 @@ export default function UsersListing() {
                     <strong>Grand-Child Earning :</strong>{" "}
                     {selectedUser.userGrandChildEarning}%
                   </p>
-                )}
+                )} */}
                 <p>
                   <strong>Referral Code :</strong> {selectedUser.referralCode}
                 </p>

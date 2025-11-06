@@ -25,15 +25,18 @@ import { cn } from "@/lib/utils";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/services/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { Lock } from "lucide-react";
 
 type TimeRange = "7d" | "30d" | "90d" | "1y";
 
-export function RevenueChart() {
+export function RevenueChart(props: any) {
+  const { onLockClick } = props;
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [chartType, setChartType] = useState<"area" | "bar">("area");
   const { user } = useAuth();
   const [data, setData] = useState([]);
-
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
   const defaultData = [
     {
       name: "Jan",
@@ -525,6 +528,28 @@ export function RevenueChart() {
     return mappedData;
   }
 
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
+  useEffect(() => {
+    if (!user) return;
+
+    const isFree = user?.planType === "free";
+
+    setIsFreePlan(isFree);
+    const createdAt = parseCreatedAt(user.createdAt);
+    const trialEnd = new Date(
+      createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+    );
+    const trialActive = new Date() <= trialEnd;
+    setIsTrialActive(trialActive);
+  }, [user]);
+
   useEffect(() => {
     async function loadData() {
       fetchAllCardsData(timeRange);
@@ -533,18 +558,31 @@ export function RevenueChart() {
       loadData();
     }
   }, [user, timeRange]);
-
+  const isProLocked = isFreePlan && !isTrialActive;
   return (
     <Card className="card-hover">
       <CardHeader className="flex flex-col">
         <div className="flex flex-col gap-1">
           <CardTitle className="text-lg font-semibold">
-            Card Activities
+            <div className="flex items-center gap-1 text-xs sm:text-sm">
+              Card Activities
+              {isProLocked && (
+                <Lock
+                  size={14}
+                  className="ml-1 text-yellow-500"
+                  onClick={() => onLockClick()}
+                />
+              )}
+            </div>
           </CardTitle>
           <CardDescription>Statistics for your business cards</CardDescription>
         </div>
 
-        <div className="mt-4 flex flex-row space-x-2 md:ml-auto">
+        <div
+          className={`mt-4 flex flex-row space-x-2 md:ml-auto ${
+            isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+          }`}
+        >
           <div className="flex bg-muted rounded-md p-1">
             <Button
               variant="ghost"
@@ -623,110 +661,134 @@ export function RevenueChart() {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            {chartType === "area" ? (
-              <AreaChart
-                data={data}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorShares" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorAdViews" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f03e3e" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#f03e3e" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorSaves" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis dataKey="name" interval={0} />
-                <YAxis />
-                <CartesianGrid strokeDasharray="3 3" />
-                <Tooltip />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="views"
-                  stroke="#3b82f6"
-                  fillOpacity={1}
-                  fill="url(#colorViews)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="saves"
-                  stroke="#10b981"
-                  fillOpacity={1}
-                  fill="url(#colorSaves)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="shares"
-                  stroke="#f97316"
-                  fillOpacity={1}
-                  fill="url(#colorShares)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="clicks"
-                  stroke="#f03e3e"
-                  fillOpacity={1}
-                  fill="url(#colorClicks)"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="adViews"
-                  stroke="#ec4899"
-                  fillOpacity={1}
-                  fill="url(#colorAdViews)"
-                />
+      <div
+        className={`transition-all duration-300 ${
+          isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+        }`}
+      >
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              {chartType === "area" ? (
+                <AreaChart
+                  data={data}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient
+                      id="colorShares"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#f97316" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient
+                      id="colorAdViews"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#ec4899" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#ec4899" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient
+                      id="colorClicks"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#f03e3e" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#f03e3e" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorSaves" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorLeads" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="name" interval={0} />
+                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="views"
+                    stroke="#3b82f6"
+                    fillOpacity={1}
+                    fill="url(#colorViews)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="saves"
+                    stroke="#10b981"
+                    fillOpacity={1}
+                    fill="url(#colorSaves)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="shares"
+                    stroke="#f97316"
+                    fillOpacity={1}
+                    fill="url(#colorShares)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="clicks"
+                    stroke="#f03e3e"
+                    fillOpacity={1}
+                    fill="url(#colorClicks)"
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="adViews"
+                    stroke="#ec4899"
+                    fillOpacity={1}
+                    fill="url(#colorAdViews)"
+                  />
 
-                <Area
-                  type="monotone"
-                  dataKey="leads"
-                  stroke="#8b5cf6"
-                  fillOpacity={1}
-                  fill="url(#colorLeads)"
-                />
-              </AreaChart>
-            ) : (
-              <BarChart
-                data={data}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" interval={0} />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="views" fill="#3b82f6" />
-                <Bar dataKey="saves" fill="#10b981" />
-                <Bar dataKey="shares" fill="#f97316" />
-                 <Bar dataKey="clicks" fill="#f03e3e" />
-                <Bar dataKey="adViews" fill="#ec4899" />
-                <Bar dataKey="leads" fill="#8b5cf6" />
-              </BarChart>
-            )}
-          </ResponsiveContainer>
-        </div>
-      </CardContent>
+                  <Area
+                    type="monotone"
+                    dataKey="leads"
+                    stroke="#8b5cf6"
+                    fillOpacity={1}
+                    fill="url(#colorLeads)"
+                  />
+                </AreaChart>
+              ) : (
+                <BarChart
+                  data={data}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" interval={0} />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="views" fill="#3b82f6" />
+                  <Bar dataKey="saves" fill="#10b981" />
+                  <Bar dataKey="shares" fill="#f97316" />
+                  <Bar dataKey="clicks" fill="#f03e3e" />
+                  <Bar dataKey="adViews" fill="#ec4899" />
+                  <Bar dataKey="leads" fill="#8b5cf6" />
+                </BarChart>
+              )}
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </div>
     </Card>
   );
 }

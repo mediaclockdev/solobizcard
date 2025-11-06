@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Crown } from "lucide-react";
+import { Crown, Lock } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
@@ -12,6 +12,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/services/firebase";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import UpgradeModal from "../UpgradeModal";
 // const chartData = [
 //   { month: "Jan", leads: 12 },
 //   { month: "Feb", leads: 19 },
@@ -28,8 +29,12 @@ const chartConfig = {
   },
 };
 
-export function LeadsGenerated() {
+export function LeadsGenerated(props:any) {
+  const {onLockClick}=props;
   const [chartData, setChartData] = useState([]);
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
+
   const { user } = useAuth();
   const defaultLeadData = [
     { month: "Jan", leads: 0 },
@@ -45,6 +50,14 @@ export function LeadsGenerated() {
     { month: "Nov", leads: 0 },
     { month: "Dec", leads: 0 },
   ];
+
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
 
   async function fetchAllLeadsData() {
     // const cardsSnapshot = await getDocs(collection(db, "cards"));
@@ -80,24 +93,50 @@ export function LeadsGenerated() {
       };
     });
 
-    console.log("mappedLeadData",mappedLeadData);
+    console.log("mappedLeadData", mappedLeadData);
 
     setChartData(mappedLeadData);
     return mappedLeadData;
   }
 
   useEffect(() => {
-    if (user) fetchAllLeadsData();
+    if (!user) return;
+
+    const isFree = user?.planType === "free";
+    setIsFreePlan(isFree);
+
+    const createdAt = parseCreatedAt(user.createdAt);
+    const trialEnd = new Date(
+      createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+    );
+    const trialActive = new Date() <= trialEnd;
+    setIsTrialActive(trialActive);
+
+    fetchAllLeadsData();
   }, [user]);
+
+  // condition: blur + badge if free and trial expired
+  const isProLocked = isFreePlan && !isTrialActive;
   return (
     <Card className="card-hover">
       <CardHeader>
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           Leads Generated
           <Crown size={16} className="text-yellow-500" />
+          {isProLocked && (
+            <Lock
+              size={14}
+              className="ml-1 text-yellow-500"
+              onClick={() => onLockClick()}
+            />
+          )}
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent
+        className={`transition-all duration-300 ${
+          isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+        }`}
+      >
         <ChartContainer config={chartConfig} className="h-[200px] w-full">
           <AreaChart data={chartData}>
             <defs>

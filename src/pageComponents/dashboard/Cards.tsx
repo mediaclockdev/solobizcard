@@ -368,21 +368,34 @@ export default function Cards() {
     navigate(`/?selectedTab=${activeTab}`);
   };
 
+  function parseCreatedAt(input) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
   const handleFavoriteCreateCard = async () => {
     if (user) {
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const userData = userDoc.exists() ? userDoc.data() : {};
         const planType = userData.planType || "free"; // default to free
+        const createdAt = parseCreatedAt(user.createdAt);
+        const trialEnd = new Date(
+          createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+        );
+        const isTrialActive = new Date() <= trialEnd;
 
-        if (planType === "free") {
+        if (planType === "free" && !isTrialActive) {
           const q = query(
             collection(db, "cards"),
             where("uid", "==", user.uid)
           );
           const snapshot = await getDocs(q);
 
-          console.log("Snapshot", snapshot);
+          console.log("Snapshot123", snapshot);
           if (snapshot.size >= 2) {
             // showToast(
             //   "Free plan allows only 2 cards. Upgrade to create unlimited cards.",

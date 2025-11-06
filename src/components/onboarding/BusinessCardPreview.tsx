@@ -582,7 +582,6 @@ export function BusinessCardPreview({
                 card.appointments.ctaUrl &&
                 /^https?:\/\//i.test(card.appointments.ctaUrl) && (
                   <a
-                    href={card.appointments.ctaUrl}
                     onClick={async () => {
                       try {
                         const cardsQuery = query(
@@ -631,6 +630,7 @@ export function BusinessCardPreview({
                         console.error("Error updating ad view:", error);
                       }
                     }}
+                    href={card.appointments.ctaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-3 text-white rounded-lg transition-colors text-base sm:text-lg font-medium hover:opacity-90 mb-2"

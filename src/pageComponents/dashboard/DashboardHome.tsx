@@ -8,15 +8,21 @@ import { ReferralsLevels } from "@/components/dashboard/ReferralsLevels";
 import { YourAccessories } from "@/components/dashboard/YourAccessories";
 import { YourEarnings } from "@/components/dashboard/YourEarnings";
 import { LeadsGenerated } from "@/components/dashboard/LeadsGenerated";
+import UpgradeModal from "@/components/UpgradeModal";
+import { useState } from "react";
 
 export default function DashboardHome() {
+    const [showWarning, setShowWarning] = useState(false);
+    const onLockClick=()=>{
+      setShowWarning(true);
+    }
   return (
     <div className="space-y-4">
       <Stats />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <RevenueChart />
+          <RevenueChart onLockClick={onLockClick}/>
         </div>
         <div className="lg:col-span-1">
           <MemberStatus />
@@ -32,9 +38,13 @@ export default function DashboardHome() {
           <YourEarnings />
         </div>
         <div className="md:col-span-3">
-          <LeadsGenerated />
+          <LeadsGenerated onLockClick={onLockClick}/>
         </div>
       </div>
+      <UpgradeModal
+        isOpen={showWarning}
+        onClose={() => setShowWarning(false)}
+      />
     </div>
   );
 }

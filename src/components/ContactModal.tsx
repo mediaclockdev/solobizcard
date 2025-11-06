@@ -23,6 +23,7 @@ import { db } from "@/services/firebase";
 import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import UpgradeModal from "./UpgradeModal";
+import { addDays } from "date-fns";
 
 interface ContactModalProps {
   isOpen: boolean;
@@ -72,6 +73,25 @@ export function ContactModal({
   const { user } = useAuth();
   const [showPermissionModal, setShowPermissionModal] = useState(false);
   const { showToast } = useToast();
+
+  function parseCreatedAt(input) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
+  const createdAt = parseCreatedAt(user.createdAt);
+  const trialEnd = new Date(
+    createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+  );
+  const isTrialActive = new Date() <= trialEnd;
+  
+  console.log("users:", user.uid);
+  console.log("createdAt:", createdAt);
+  console.log("trialEnd:", trialEnd);
+  console.log("isTrialActive:", isTrialActive);
 
   // Clean up camera stream when modal closes
   useEffect(() => {
@@ -481,14 +501,16 @@ export function ContactModal({
                   Scan Paper Biz Card
                 </Button>
 
-                <Button
-                  onClick={() => handleSendContact()}
-                  className="w-full flex items-center justify-center gap-2"
-                  style={{ backgroundColor: theme }}
-                >
-                  <FileText size={20} />
-                  Send via Contact Form
-                </Button>
+                {user.planType === "free" && !isTrialActive ? null : (
+                  <Button
+                    onClick={() => handleSendContact()}
+                    className="w-full flex items-center justify-center gap-2"
+                    style={{ backgroundColor: theme }}
+                  >
+                    <FileText size={20} />
+                    Send via Contact Form
+                  </Button>
+                )}
               </div>
             )}
 

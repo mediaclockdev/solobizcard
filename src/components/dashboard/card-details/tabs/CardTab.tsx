@@ -5,6 +5,7 @@ import { CardShare } from "@/components/dashboard/CardShare";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import UpgradeModal from "@/components/UpgradeModal";
 
 interface CardTabProps {
   card: BusinessCard;
@@ -16,12 +17,16 @@ interface CardTabProps {
 export function CardTab({ card, cardId, qrCodeUrl, onUpgrade }: CardTabProps) {
   const { user } = useAuth();
   const [showProPopup, setShowProPopup] = useState(!user);
+    const [showWarning, setShowWarning] = useState(false);
   const router = useRouter();
+  const onLockClick=()=>{
+    setShowWarning(true);
+  }
 
   return (
     <div className="space-y-4 relative">
       {/* Background content always visible */}
-      <CardAnalytics onUpgrade={onUpgrade} />
+      <CardAnalytics onUpgrade={onUpgrade} onLockClick={onLockClick}/>
       <CardShare card={card} cardId={cardId} qrCodeUrl={qrCodeUrl} />
 
       {/* Pro Feature Overlay */}
@@ -78,6 +83,10 @@ export function CardTab({ card, cardId, qrCodeUrl, onUpgrade }: CardTabProps) {
           </div>
         </div>
       )}
+      <UpgradeModal
+        isOpen={showWarning}
+        onClose={() => setShowWarning(false)}
+      />
     </div>
   );
 }

@@ -95,6 +95,9 @@ export function Stats() {
   const [percentageChangeSaveContact, setPercentageChangeSaveContact] =
     useState(0);
 
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
+
   async function fetchUserCardStats(uid: string) {
     try {
       const now = new Date();
@@ -234,14 +237,36 @@ export function Stats() {
     }
   }
 
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
   useEffect(() => {
     if (user) {
+      const isFree = user?.planType === "free";
+      setIsFreePlan(isFree);
+
+      const createdAt = parseCreatedAt(user.createdAt);
+      const trialEnd = new Date(
+        createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+      );
+      const trialActive = new Date() <= trialEnd;
+      setIsTrialActive(trialActive);
       fetchUserCardStats(user?.uid);
     }
   }, [user]);
+  const isProLocked = isFreePlan && !isTrialActive;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+    <div
+      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 transition-all duration-300 ${
+        isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+      }`}
+    >
       <StatCard
         title="Card Views"
         value={cardView}

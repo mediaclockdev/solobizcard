@@ -523,7 +523,9 @@ export function AppointmentForm({
         <div className="space-y-4">
           {/* Type */}
           <div className="space-y-2">
-            <Label>Direct Ads Type</Label>
+            <Label>
+              Direct Ads Type<span className="text-red-500"> *</span>
+            </Label>
             <Select
               value={card.appointments.directAds?.type || ""}
               onValueChange={(value) => handleDirectAdsChange("type", value)}

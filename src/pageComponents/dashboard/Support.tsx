@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ExternalLink, ArrowRight } from "lucide-react";
+import { ExternalLink, ArrowRight, Lock } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/contexts/ToastContext";
@@ -36,6 +36,7 @@ import {
   increment,
 } from "firebase/firestore";
 import { db } from "@/services/firebase";
+import UpgradeModal from "@/components/UpgradeModal";
 
 export default function Support() {
   const [open, setOpen] = React.useState(true);
@@ -44,13 +45,23 @@ export default function Support() {
   const [status, setStatus] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { showToast } = useToast();
-
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
   const [formData, setFormData] = useState({
     userName: "",
     userEmail: "",
     subject: "",
     issueDescription: "",
   });
+
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
 
   // ✅ Fetch user details from Firestore
   useEffect(() => {
@@ -69,6 +80,16 @@ export default function Support() {
       }
       setIsLoading(false);
     };
+
+    const isFree = user?.planType === "free";
+
+    setIsFreePlan(isFree);
+    const createdAt = parseCreatedAt(user.createdAt);
+    const trialEnd = new Date(
+      createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+    );
+    const trialActive = new Date() <= trialEnd;
+    setIsTrialActive(trialActive);
 
     fetchUserData();
   }, [authLoading, user]);
@@ -127,7 +148,7 @@ export default function Support() {
       setLoading(false);
     }
   };
-
+  const isProLocked = isFreePlan && !isTrialActive;
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
@@ -3143,7 +3164,8 @@ export default function Support() {
                     </DialogTitle>
                   </DialogHeader>
                   <h2 className="text-xl font-semibold mt-4">
-                    Your Guide to SoloBizCards’ Business Marketing Community and SoloPro Benefits
+                    Your Guide to SoloBizCards’ Business Marketing Community and
+                    SoloPro Benefits
                   </h2>
                   <div className="relative overflow-y-scroll h-[calc(90vh-100px)] pr-2">
                     <p className="text-gray-700 mb-4">
@@ -3660,90 +3682,109 @@ export default function Support() {
         <Card>
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-gray-900">
-              Submit an Issue
+              <div className="flex items-center gap-1 text-xs sm:text-sm">
+                Submit an Issue
+                {isProLocked && (
+                  <Lock
+                    size={14}
+                    className="ml-1 text-yellow-500"
+                    onClick={() => setShowWarning(true)}
+                  />
+                )}
+              </div>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="userName">User Name</Label>
-                  <Input
-                    id="userName"
-                    placeholder="Enter your name"
-                    value={formData.userName}
-                    onChange={handleChange}
-                    required
-                    readOnly
-                  />
+          <div
+            className={`transition-all duration-300 ${
+              isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+            }`}
+          >
+            <CardContent className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="userName">User Name</Label>
+                    <Input
+                      id="userName"
+                      placeholder="Enter your name"
+                      value={formData.userName}
+                      onChange={handleChange}
+                      required
+                      readOnly
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="userEmail">User Email</Label>
+                    <Input
+                      id="userEmail"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.userEmail}
+                      onChange={handleChange}
+                      required
+                      readOnly
+                    />
+                  </div>
                 </div>
+
+                {/* ✅ Subject Dropdown */}
                 <div className="space-y-2">
-                  <Label htmlFor="userEmail">User Email</Label>
-                  <Input
-                    id="userEmail"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.userEmail}
-                    onChange={handleChange}
+                  <Label htmlFor="subject">Subject</Label>
+                  <Select
+                    onValueChange={handleSubjectChange}
+                    value={formData.subject}
                     required
-                    readOnly
-                  />
+                  >
+                    <SelectTrigger id="subject">
+                      <SelectValue placeholder="-- Select an option --" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Report a bug">Report a bug</SelectItem>
+                      <SelectItem value="Tech support">Tech support</SelectItem>
+                      <SelectItem value="Suggestions">Suggestions</SelectItem>
+                      <SelectItem value="How to earn income">
+                        How to earn income
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
 
-              {/* ✅ Subject Dropdown */}
-              <div className="space-y-2">
-                <Label htmlFor="subject">Subject</Label>
-                <Select
-                  onValueChange={handleSubjectChange}
-                  value={formData.subject}
-                  required
-                >
-                  <SelectTrigger id="subject">
-                    <SelectValue placeholder="-- Select an option --" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Report a bug">Report a bug</SelectItem>
-                    <SelectItem value="Tech support">Tech support</SelectItem>
-                    <SelectItem value="Suggestions">Suggestions</SelectItem>
-                    <SelectItem value="How to earn income">
-                      How to earn income
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                {/* ✅ Description */}
+                {/* ✅ Description with 2000 character limit */}
+                <div className="space-y-2">
+                  <Label htmlFor="issueDescription">Description</Label>
+                  <Textarea
+                    id="issueDescription"
+                    placeholder="Describe your issue (max 2000 characters)"
+                    rows={4}
+                    maxLength={2000} // <-- built-in character limit
+                    value={formData.issueDescription}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        issueDescription: e.target.value,
+                      })
+                    }
+                    required
+                  />
+                  <p className="text-xs text-gray-500">
+                    {formData.issueDescription.length}/2000 characters
+                  </p>
+                </div>
 
-              {/* ✅ Description */}
-              {/* ✅ Description with 2000 character limit */}
-              <div className="space-y-2">
-                <Label htmlFor="issueDescription">Description</Label>
-                <Textarea
-                  id="issueDescription"
-                  placeholder="Describe your issue (max 2000 characters)"
-                  rows={4}
-                  maxLength={2000} // <-- built-in character limit
-                  value={formData.issueDescription}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      issueDescription: e.target.value,
-                    })
-                  }
-                  required
-                />
-                <p className="text-xs text-gray-500">
-                  {formData.issueDescription.length}/2000 characters
-                </p>
-              </div>
-
-              <Button type="submit" disabled={loading}>
-                {loading ? "Sending..." : "Submit"}
-              </Button>
-              {status && <p className="text-sm mt-2">{status}</p>}
-            </form>
-          </CardContent>
+                <Button type="submit" disabled={loading}>
+                  {loading ? "Sending..." : "Submit"}
+                </Button>
+                {status && <p className="text-sm mt-2">{status}</p>}
+              </form>
+            </CardContent>
+          </div>
         </Card>
       </div>
+      <UpgradeModal
+        isOpen={showWarning}
+        onClose={() => setShowWarning(false)}
+      />
     </div>
   );
 }

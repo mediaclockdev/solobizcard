@@ -882,14 +882,18 @@ export default function Referrals() {
           const refSnap = await getDoc(referalRef);
 
           let badgeLevel = 1;
+          let memberLevel = "Starter";
           if (refSnap.exists()) {
             const refData = refSnap.data();
             if (refData.badgeLevel) {
               badgeLevel = refData.badgeLevel ?? 1;
             }
+            if (refData.memberLevel) {
+              memberLevel = refData.memberLevel ?? "Starter";
+            }
           }
           const snapshot = await getDocs(q);
-          if (snapshot.empty) return { ...referral, badgeLevel };
+          if (snapshot.empty) return { ...referral, badgeLevel, memberLevel };
           const cardData = snapshot.docs[0].data();
           const latestCardId = cardData?.metadata?.id || null;
           const profilePhoto = cardData?.profilePhoto || null;
@@ -905,6 +909,7 @@ export default function Referrals() {
             lastName,
             cardName,
             badgeLevel,
+            memberLevel,
           };
         })
       );
@@ -1233,28 +1238,26 @@ export default function Referrals() {
                       ))}
                     </div>
 
-                    {/* Modal for all referrals with pagination */}
-                    <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                    {/* Referrals Modal (Updated Design) */}
+                    <Dialog
+                      open={isModalOpen}
+                      onOpenChange={(open) => {
+                        setIsModalOpen(open);
+                        if (!open) setCurrentPage(1);
+                      }}
+                    >
                       <DialogPortal>
                         {/* Overlay */}
                         <DialogOverlay className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
 
-                        {/* Modal */}
-                        <DialogContent className="fixed left-[50%] top-[50%] z-50 grid translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg max-w-5xl w-full h-[65vh]">
-                          {/* Close Icon */}
-                          <button
-                            onClick={() => setIsModalOpen(false)}
-                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 transition"
-                          >
-                            {/* <X className="h-5 w-5" /> */}
-                          </button>
-
+                        {/* Modal Content */}
+                        <DialogContent className=" left-1/2 z-50 grid translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out sm:rounded-lg max-w-5xl w-full max-h-[85vh]">
                           {/* Header */}
-                          <DialogHeader className="flex flex-col space-y-1.5 text-center sm:text-left">
-                            <DialogTitle className="font-semibold tracking-tight text-xl">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl font-semibold">
                               Your Complete List of Referrals
                             </DialogTitle>
-                            <p className="text-muted-foreground text-base mt-2">
+                            <p className="text-base text-muted-foreground mt-2">
                               Total Referrals:{" "}
                               <span className="font-semibold text-foreground">
                                 {enrichedReferrals.length}
@@ -1262,84 +1265,8 @@ export default function Referrals() {
                             </p>
                           </DialogHeader>
 
-                          {/* Body (Scrollable) */}
-                          {/* <div className="overflow-auto px-6 py-4">
-                            <table className="min-w-full border border-gray-200 rounded-lg">
-                              <thead className="bg-gray-100">
-                                <tr>
-                                  <th className="text-left py-2 px-4 border-b">
-                                    Profile Photo
-                                  </th>
-                                  <th className="text-left py-2 px-4 border-b">
-                                    Card Name
-                                  </th>
-                                  <th className="text-left py-2 px-4 border-b">
-                                    First Name
-                                  </th>
-                                  <th className="text-left py-2 px-4 border-b">
-                                    Last Name
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {paginatedData.length > 0 ? (
-                                  paginatedData.map((referral, index) => (
-                                    <tr
-                                      key={index}
-                                      className="hover:bg-gray-50 transition cursor-pointer"
-                                      onClick={() =>
-                                        referral?.latestCardId &&
-                                        navigate(
-                                          "/card/" + referral?.latestCardId
-                                        )
-                                      }
-                                    >
-                                      <td className="py-2 px-4 border-b">
-                                        <Avatar
-                                          className="w-10 h-10 border-2 border-background"
-                                          style={{
-                                            backgroundColor: "#808080db",
-                                            boxShadow:
-                                              "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px",
-                                          }}
-                                        >
-                                          <AvatarImage
-                                            src={
-                                              referral?.profilePhoto ||
-                                              "/lovable-uploads/logo_color_correct.png"
-                                            }
-                                          />
-                                          <AvatarFallback>
-                                            {referral?.name
-                                              ?.split(" ")
-                                              ?.map((n) => n[0])
-                                              ?.join("")}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                      </td>
-                                      <td className="py-2 px-4 border-b text-blue-600 font-medium">
-                                        {referral?.cardName || "—"}
-                                      </td>
-                                      <td className="py-2 px-4 border-b">
-                                        {referral?.firstName || "—"}
-                                      </td>
-                                      <td className="py-2 px-4 border-b">
-                                        {referral?.lastName || "—"}
-                                      </td>
-                                    </tr>
-                                  ))
-                                ) : (
-                                  <tr>
-                                    <td className="text-center py-4 text-muted-foreground">
-                                      No referrals found
-                                    </td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div> */}
-
                           <div className="space-y-4">
+                            {/* Referrals Grid */}
                             <div className="grid grid-cols-6 md:grid-cols-8 lg:grid-cols-12 gap-4 py-4 max-h-[50vh] overflow-y-auto">
                               {paginatedData.length > 0 ? (
                                 paginatedData.map((referral, index) => (
@@ -1353,35 +1280,35 @@ export default function Referrals() {
                                       )
                                     }
                                   >
-                                    <span className="relative flex shrink-0 overflow-hidden rounded-full w-12 h-12 hover:scale-110 transition-transform duration-200 border-2 border-muted hover:border-primary">
-                                      <img
-                                        className="aspect-square h-full w-full object-cover"
-                                        alt={referral?.firstName || "User"}
-                                        onClick={() => {
-                                          referral?.latestCardId &&
-                                            navigate(
-                                              "/card/" + referral?.latestCardId
-                                            );
-                                        }}
-                                        style={{
-                                          zIndex: 10 - index,
-                                          backgroundColor: "#808080db",
-                                          boxShadow:
-                                            "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px",
-                                        }}
+                                    {/* Avatar */}
+                                    <Avatar className="w-12 h-12 cursor-pointer hover:scale-110 transition-transform duration-200 border-2 border-muted hover:border-primary">
+                                      <AvatarImage
+                                        style={{ backgroundColor: "#8080805e" }}
                                         src={
                                           referral?.profilePhoto ||
                                           "/lovable-uploads/logo_color_correct.png"
                                         }
+                                        alt={referral?.firstName || "User"}
                                       />
-                                    </span>
+                                      <AvatarFallback className="text-xs">
+                                        {referral?.firstName
+                                          ?.split(" ")
+                                          ?.map((n) => n[0])
+                                          ?.join("") || "?"}
+                                      </AvatarFallback>
+                                    </Avatar>
+
+                                    {/* Name + Level */}
                                     <div className="text-center">
                                       <p className="text-xs font-medium truncate max-w-[60px] group-hover:text-primary transition-colors">
                                         {referral?.firstName || "—"}
                                       </p>
-                                      <div className="inline-flex items-center rounded-full border font-semibold transition-colors border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 text-[10px] px-1 py-0">
-                                        Level- {referral?.badgeLevel}
-                                      </div>
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-[10px] px-1 py-0 mt-1"
+                                      >
+                                        {referral?.memberLevel}
+                                      </Badge>
                                     </div>
                                   </div>
                                 ))
@@ -1391,56 +1318,89 @@ export default function Referrals() {
                                 </div>
                               )}
                             </div>
-                          </div>
-
-                          {/* Footer */}
-                          <DialogFooter className="border-t px-6 py-4 flex items-center justify-between">
-                            {/* Left Side Info */}
-                            <div className="text-sm text-muted-foreground">
-                              Page {currentPage} of {totalPages}
-                            </div>
 
                             {/* Pagination Controls */}
-                            <div className="flex items-center gap-2">
-                              {/* Previous Button */}
-                              <button
-                                disabled={currentPage === 1}
-                                onClick={() =>
-                                  setCurrentPage((prev) =>
-                                    Math.max(prev - 1, 1)
-                                  )
-                                }
-                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors 
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
-      disabled:pointer-events-none disabled:opacity-50 border border-input bg-background 
-      hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3"
-                              >
-                                <ChevronLeft className="h-4 w-4 mr-1" />{" "}
-                                Previous
-                              </button>
+                            <div className="flex items-center justify-between border-t pt-4">
+                              <div className="text-sm text-muted-foreground">
+                                Showing {(currentPage - 1) * itemsPerPage + 1}-
+                                {Math.min(
+                                  currentPage * itemsPerPage,
+                                  enrichedReferrals.length
+                                )}{" "}
+                                of {enrichedReferrals.length}
+                              </div>
 
-                              {/* Current Page Indicator */}
-                              <span className="text-sm font-medium px-2">
-                                {currentPage}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                {/* Previous */}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setCurrentPage((prev) =>
+                                      Math.max(prev - 1, 1)
+                                    )
+                                  }
+                                  disabled={currentPage === 1}
+                                >
+                                  Previous
+                                </Button>
 
-                              {/* Next Button */}
-                              <button
-                                disabled={currentPage === totalPages}
-                                onClick={() =>
-                                  setCurrentPage((prev) =>
-                                    Math.min(prev + 1, totalPages)
-                                  )
-                                }
-                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors 
-      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
-      disabled:pointer-events-none disabled:opacity-50 border border-input bg-background 
-      hover:bg-accent hover:text-accent-foreground h-9 rounded-md px-3"
-                              >
-                                Next <ChevronRight className="h-4 w-4 ml-1" />
-                              </button>
+                                {/* Page Numbers */}
+                                <div className="flex items-center gap-1">
+                                  {Array.from(
+                                    { length: Math.min(5, totalPages) },
+                                    (_, i) => {
+                                      let pageNum;
+                                      if (totalPages <= 5) {
+                                        pageNum = i + 1;
+                                      } else if (currentPage <= 3) {
+                                        pageNum = i + 1;
+                                      } else if (
+                                        currentPage >=
+                                        totalPages - 2
+                                      ) {
+                                        pageNum = totalPages - 4 + i;
+                                      } else {
+                                        pageNum = currentPage - 2 + i;
+                                      }
+
+                                      return (
+                                        <Button
+                                          key={pageNum}
+                                          variant={
+                                            currentPage === pageNum
+                                              ? "default"
+                                              : "outline"
+                                          }
+                                          size="sm"
+                                          className="w-8 h-8 p-0"
+                                          onClick={() =>
+                                            setCurrentPage(pageNum)
+                                          }
+                                        >
+                                          {pageNum}
+                                        </Button>
+                                      );
+                                    }
+                                  )}
+                                </div>
+
+                                {/* Next */}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    setCurrentPage((prev) =>
+                                      Math.min(totalPages, prev + 1)
+                                    )
+                                  }
+                                  disabled={currentPage === totalPages}
+                                >
+                                  Next
+                                </Button>
+                              </div>
                             </div>
-                          </DialogFooter>
+                          </div>
                         </DialogContent>
                       </DialogPortal>
                     </Dialog>

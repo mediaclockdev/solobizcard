@@ -1,11 +1,18 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FormComponentProps } from "@/types/businessCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { defaultBrandColors } from "@/utils/businessCard";
+import { useAuth } from "@/contexts/AuthContext";
+import { Lock } from "lucide-react";
+import UpgradeModal from "@/components/UpgradeModal";
 
 export function BrandColorSection({ card, onUpdate }: FormComponentProps) {
+  const { user } = useAuth();
+  const [isTrialActive, setIsTrialActive] = useState<boolean>(false);
+  const [isFreePlan, setIsFreePlan] = useState<boolean>(false);
+  const [showWarning, setShowWarning] = useState(false);
   const handleInputChange = (field: string, value: string) => {
     const keys = field.split(".");
     const updatedCard = { ...card };
@@ -19,11 +26,47 @@ export function BrandColorSection({ card, onUpdate }: FormComponentProps) {
     onUpdate(updatedCard);
   };
 
+  function parseCreatedAt(input) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
+  useEffect(() => {
+    if (user) {
+      const isFreePlan = user?.planType === "free";
+      setIsFreePlan(isFreePlan);
+      const createdAt = parseCreatedAt(user.createdAt);
+      const trialEnd = new Date(
+        createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+      );
+      const isTrialActive = new Date() <= trialEnd;
+      setIsTrialActive(isTrialActive);
+    }
+  }, [user]);
+
   return (
     <div className="space-y-3">
-      <Label className="text-sm font-medium text-foreground">Brand Color</Label>
+      <div className="flex items-center gap-1 text-xs sm:text-sm">
+        <Label className="text-sm font-medium text-foreground">
+          Brand Color
+        </Label>
+        {isFreePlan && !isTrialActive && (
+          <Lock
+            size={14}
+            className="ml-1 text-yellow-500"
+            onClick={() => setShowWarning(true)}
+          />
+        )}
+      </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+      <div
+        className={`flex flex-col sm:flex-row sm:items-center gap-4 ${
+          isFreePlan && !isTrialActive ? "opacity-60 pointer-events-none" : ""
+        }`}
+      >
         {/* Color Picker + Hex Input */}
         <div className="flex items-center gap-1">
           <input
@@ -60,6 +103,10 @@ export function BrandColorSection({ card, onUpdate }: FormComponentProps) {
           ))}
         </div>
       </div>
+      <UpgradeModal
+        isOpen={showWarning}
+        onClose={() => setShowWarning(false)}
+      />
     </div>
   );
 }

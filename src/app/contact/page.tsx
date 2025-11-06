@@ -76,10 +76,10 @@ export default function ContactUs() {
       {/* <h1 className="text-3xl font-bold text-gray-900 mb-4">
         Get in Touch with Us
       </h1> */}
-      <p className="text-gray-600 mb-10">
+      {/* <p className="text-gray-600 mb-10">
         Have questions, suggestions, or need support? Fill out the form below
         and our team will get back to you as soon as possible.
-      </p>
+      </p> */}
 
       <Card>
         <CardHeader>

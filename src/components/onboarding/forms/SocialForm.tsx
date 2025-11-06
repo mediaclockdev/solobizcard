@@ -1,13 +1,24 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FormComponentProps } from "@/types/businessCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Linkedin, Twitter, Facebook, Instagram, Youtube } from "lucide-react";
-
+import {
+  Linkedin,
+  Twitter,
+  Facebook,
+  Instagram,
+  Youtube,
+  Lock,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import UpgradeModal from "@/components/UpgradeModal";
 export function SocialForm({ card, onUpdate }: FormComponentProps) {
   const [warning, setWarning] = useState("");
-
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const { user } = useAuth();
   const baseUrls: Record<string, string> = {
     linkedin: "https://linkedin.com/in/",
     twitter: "https://twitter.com/",
@@ -16,6 +27,14 @@ export function SocialForm({ card, onUpdate }: FormComponentProps) {
     youtube: "https://youtube.com/channel/",
     tiktok: "https://tiktok.com/",
   };
+
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
 
   const countActive = () =>
     Object.keys(baseUrls).reduce((count, key) => {
@@ -44,19 +63,19 @@ export function SocialForm({ card, onUpdate }: FormComponentProps) {
     let fullUrl = prefix ?? "";
     // return;
     const defaultValue = value + "/";
-    if(value.length>0){
-    if (defaultValue !== prefix) {
-      // if(value.includes(prefix))
-      let cleanValue = value.replace(prefix, "");
-      console.log("ccc",cleanValue);
-      if(cleanValue?.includes(field)){
-      fullUrl = cleanValue ?  cleanValue : "";  
-      console.log("fff=",fullUrl)
-      }else{
-      fullUrl = cleanValue ? prefix + cleanValue : "";
+    if (value.length > 0) {
+      if (defaultValue !== prefix) {
+        // if(value.includes(prefix))
+        let cleanValue = value.replace(prefix, "");
+        console.log("ccc", cleanValue);
+        if (cleanValue?.includes(field)) {
+          fullUrl = cleanValue ? cleanValue : "";
+          console.log("fff=", fullUrl);
+        } else {
+          fullUrl = cleanValue ? prefix + cleanValue : "";
+        }
       }
     }
-  }
 
     const updatedCard = {
       ...card,
@@ -155,6 +174,20 @@ export function SocialForm({ card, onUpdate }: FormComponentProps) {
     },
   ];
 
+  useEffect(() => {
+    if (!user) return;
+
+    const isFree = user?.planType === "free";
+    setIsFreePlan(isFree);
+
+    const createdAt = parseCreatedAt(user.createdAt);
+    const trialEnd = new Date(
+      createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+    );
+    const trialActive = new Date() <= trialEnd;
+    setIsTrialActive(trialActive);
+  }, [user]);
+  const isProLocked = isFreePlan && !isTrialActive;
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground mb-6">
@@ -170,8 +203,17 @@ export function SocialForm({ card, onUpdate }: FormComponentProps) {
           <div key={key} className="space-y-2">
             <Label htmlFor={key} className="flex items-center gap-2">
               <Icon className="h-4 w-4" />
-              {label}
+              <span>{label}</span>
+
+              {isProLocked && (
+                <Lock
+                  size={14}
+                  className="ml-1 text-yellow-500"
+                  onClick={() => setShowWarning(true)}
+                />
+              )}
             </Label>
+
             <Input
               id={key}
               type="text"
@@ -181,10 +223,15 @@ export function SocialForm({ card, onUpdate }: FormComponentProps) {
               onBlur={() => handleBlur(key)}
               onChange={(e) => handleInputChange(key, e.target.value)}
               className={isLocked(key) ? "bg-gray-100 cursor-not-allowed" : ""}
+              disabled={isProLocked}
             />
           </div>
         ))}
       </div>
+      <UpgradeModal
+        isOpen={showWarning}
+        onClose={() => setShowWarning(false)}
+      />
     </div>
   );
 }

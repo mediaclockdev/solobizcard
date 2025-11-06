@@ -14,6 +14,7 @@ import {
   AreaChart as AreaChartIcon,
   BarChart3,
   Crown,
+  Lock,
 } from "lucide-react";
 import {
   AreaChart,
@@ -44,6 +45,7 @@ import { useNavigate, useLocation } from "@/lib/navigation";
 
 interface CardAnalyticsProps {
   onUpgrade: () => void;
+  onLockClick: () => void;
 }
 
 type TimeRange = "7d" | "30d" | "90d" | "1y";
@@ -221,7 +223,7 @@ type TimeRange = "7d" | "30d" | "90d" | "1y";
 //   ],
 // };
 
-export function CardAnalytics({ onUpgrade }: CardAnalyticsProps) {
+export function CardAnalytics({ onUpgrade, onLockClick }: CardAnalyticsProps) {
   const [timeRange, setTimeRange] = useState<TimeRange>("7d");
   const [chartType, setChartType] = useState<"area" | "bar">("area");
   //const currentData = chartData[timeRange];
@@ -249,6 +251,8 @@ export function CardAnalytics({ onUpgrade }: CardAnalyticsProps) {
   const location = useLocation();
   const cardId = location.pathname.split("/").pop();
   const [chartData, setChartData] = useState([]);
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
 
   async function countChildren(userId: string) {
     const userRef = doc(db, "referrals", userId);
@@ -471,6 +475,14 @@ export function CardAnalytics({ onUpgrade }: CardAnalyticsProps) {
     }
 
     return res;
+  }
+
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
   }
 
   useEffect(() => {
@@ -766,6 +778,15 @@ export function CardAnalytics({ onUpgrade }: CardAnalyticsProps) {
     };
 
     if (user) {
+      const isFree = user?.planType === "free";
+      setIsFreePlan(isFree);
+
+      const createdAt = parseCreatedAt(user.createdAt);
+      const trialEnd = new Date(
+        createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+      );
+      const trialActive = new Date() <= trialEnd;
+      setIsTrialActive(trialActive);
       fetchCounts();
       fetchSettings();
       fetchCardDetails();
@@ -782,11 +803,16 @@ export function CardAnalytics({ onUpgrade }: CardAnalyticsProps) {
       color: "bg-blue-500",
     },
   ];
+  const isProLocked = isFreePlan && !isTrialActive;
 
   return (
     <div className="space-y-4">
       {/* Metrics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div
+        className={`grid grid-cols-2 lg:grid-cols-6 gap-4 transition-all duration-300 ${
+          isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+        }`}
+      >
         <Card className="border border-gray-200 hover:border-gray-400 hover:shadow-md transition-all cursor-pointer">
           <CardContent className="p-4">
             <div className="flex flex-col space-y-2">
@@ -910,12 +936,27 @@ export function CardAnalytics({ onUpgrade }: CardAnalyticsProps) {
         <Card className="lg:col-span-4 border border-gray-200 hover:border-gray-400 hover:shadow-md transition-all cursor-pointer">
           <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
             <div className="space-y-1">
-              <CardTitle className="text-lg">Card Analytics</CardTitle>
+              <CardTitle className="text-lg">
+                <div className="flex items-center gap-1 text-xs sm:text-sm">
+                  Card Analytics{" "}
+                  {isProLocked && (
+                    <Lock
+                      size={14}
+                      className="ml-1 text-yellow-500"
+                      onClick={() => onLockClick()}
+                    />
+                  )}
+                </div>
+              </CardTitle>
               <p className="text-sm text-muted-foreground">
                 Track your card performance across all metrics
               </p>
             </div>
-            <div className="flex items-center space-x-2">
+            <div
+              className={`flex items-center space-x-2 transition-all duration-300 ${
+                isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+              }`}
+            >
               <div className="flex items-center border rounded-md">
                 <Button
                   variant={chartType === "area" ? "default" : "ghost"}
@@ -970,7 +1011,11 @@ export function CardAnalytics({ onUpgrade }: CardAnalyticsProps) {
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent
+            className={`transition-all duration-300 ${
+              isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+            }`}
+          >
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === "area" ? (
