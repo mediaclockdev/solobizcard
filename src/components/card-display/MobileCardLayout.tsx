@@ -343,10 +343,10 @@ export function MobileCardLayout({
 
     // Mock API call - replace with actual implementation
     setTimeout(() => {
-      toast({
-        title: "Contact information sent!",
-        description: "Your contact details have been shared successfully.",
-      });
+      // toast({
+      //   title: "Contact information sent!",
+      //   description: "Your contact details have been shared successfully.",
+      // });
       setIsSubmitting(false);
       setShowContactModal(false);
       setCustomMessage(
