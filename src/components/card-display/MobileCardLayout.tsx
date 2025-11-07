@@ -480,7 +480,7 @@ export function MobileCardLayout({
       <ShareModal
         isOpen={showShareModal}
         onClose={handleCloseShareModal}
-        url={window.location.href}
+        url={`${window.location.href}?selectedTab=favorites&view=true`}
         refLink={refLink}
         title={`${getFullName(card)}'s Digital Business Card`}
         cardProfile={card.profile}
