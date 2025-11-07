@@ -493,14 +493,14 @@ export function ContactModal({
 
             {mode === "select" && (
               <div className="space-y-4">
-                {/* <Button
+                <Button
                   onClick={handleScanCard}
                   className="w-full flex items-center justify-center gap-2"
                   variant="outline"
                 >
                   <Camera size={20} />
                   Scan Paper Biz Card
-                </Button> */}
+                </Button>
 
                 {user.planType === "free" && !isTrialActive ? null : (
                   <Button

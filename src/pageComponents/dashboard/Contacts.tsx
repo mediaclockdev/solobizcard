@@ -199,7 +199,7 @@ export default function Contacts() {
           jobTitle: userData.jobTitle || "Co-Founder",
           companyName: userData.companyName || "",
           email: userData.email || "rob@solobizcards.com",
-          phone: userData.phone || "786 788 683",
+          phone: userData.phone || "786 788 6983",
           dateAdded: userData.createdAt
             ? format(userData.createdAt.toDate(), "MMM dd, yyyy, hh:mm a")
             : "",
