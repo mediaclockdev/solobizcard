@@ -67,7 +67,7 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
   }, [user]);
 
   const isProLocked = isFreePlan && !isTrialActive;
-
+ 
   useEffect(() => {
     if (showWarning) {
       document.body.classList.add("overflow-hidden");
@@ -75,6 +75,11 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
       document.body.classList.remove("overflow-hidden");
     }
   }, [showWarning]);
+  useEffect(() => {
+    if (isProLocked) {
+      handleSectionTypeChange("aboutMe");
+    }
+  }, [isProLocked]);
 
   const handleInputChange = (field: string, value: string) => {
     const updatedCard = {
@@ -114,7 +119,7 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
     };
     onUpdate(updatedCard);
   };
-
+ 
   const handleCustomTitleChange = (e) => {
     setCardData((prev) => ({
       ...prev,

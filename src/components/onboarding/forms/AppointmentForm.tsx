@@ -41,6 +41,8 @@ export function AppointmentForm({
   const [isTrialActive, setIsTrialActive] = useState(false);
   const [isFreePlan, setIsFreePlan] = useState(false);
   const { isAuthenticated, user } = useAuth();
+   const [trialDays, setTrialDays] = useState<number | null>(null);
+
   const storage = getStorage();
 
   useEffect(() => {
@@ -50,6 +52,30 @@ export function AppointmentForm({
       document.body.classList.remove("overflow-hidden");
     }
   }, [showWarning]);
+
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
+  useEffect(() => {
+    if (!user) return;
+
+    const isFree = user?.planType === "free";
+    setIsFreePlan(isFree);
+
+    const createdAt = parseCreatedAt(user?.createdAt);
+    const trialEnd = new Date(
+      createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
+    );
+    const trialActive = new Date() <= trialEnd;
+    setIsTrialActive(trialActive);
+  }, [user]);
+  const isProLocked = isFreePlan && !isTrialActive;
+  console.log("isProLocked", isProLocked);
 
   const handleInputChange = (field: string, value: string) => {
     const updatedCard = {
@@ -75,9 +101,13 @@ export function AppointmentForm({
     };
     onUpdate(updatedCard);
   };
-
-  const handleOnChange = (value) => {
+  useEffect(() => {
     if (isProLocked) {
+      handleOnChange("booking");
+    }
+  }, [isProLocked]);
+  const handleOnChange = (value) => {
+    if (isProLocked && value!=='booking') {
       setShowWarning(true);
     } else {
       handleAppointmentTypeChange(value);
@@ -261,8 +291,7 @@ export function AppointmentForm({
     }
   };
 
-  const [trialDays, setTrialDays] = useState<number | null>(null);
-
+ 
   const canShowCustomSection = () => {
     if (!user) return false;
     if (user?.planType !== "free") return true;
@@ -317,30 +346,6 @@ export function AppointmentForm({
   }, [user]);
 
   const appointmentType = card.appointments?.appointmentType || "booking";
-
-  function parseCreatedAt(input: any) {
-    if (input instanceof Date) return input;
-    if (input && input.seconds) return new Date(input.seconds * 1000);
-    if (typeof input === "number") return new Date(input);
-    if (typeof input === "string") return new Date(input.replace(" at", ""));
-    return new Date();
-  }
-
-  useEffect(() => {
-    if (!user) return;
-
-    const isFree = user?.planType === "free";
-    setIsFreePlan(isFree);
-
-    const createdAt = parseCreatedAt(user?.createdAt);
-    const trialEnd = new Date(
-      createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
-    );
-    const trialActive = new Date() <= trialEnd;
-    setIsTrialActive(trialActive);
-  }, [user]);
-  const isProLocked = isFreePlan && !isTrialActive;
-  console.log("isProLocked", isProLocked);
 
   return (
     <div className="space-y-4">

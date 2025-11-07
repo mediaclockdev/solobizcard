@@ -58,7 +58,7 @@ export function Lightbox({
           <img
             src={imageSrc}
             alt={title || "Direct Ad"}
-            className="max-w-full max-h-[80vh] object-contain"
+            className="max-w-full h-[90vh] object-contain"
           />
         </div>
 
