@@ -419,7 +419,7 @@ export function ContactModal({
   };
 
   const handleSendContact = async () => {
-    if (!user || (user?.planType == "free" && !isTrialActive)) {
+    if ((user?.planType == "free" && !isTrialActive)) {
       setShowWarning(true);
       return;
     }
