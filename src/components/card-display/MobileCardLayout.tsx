@@ -10,7 +10,7 @@ import { Lightbox } from "@/components/ui/lightbox";
 import { getFullName, generateVCard } from "@/utils/businessCard";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Share2, Download, Eye } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, UserData } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { useRouter, useSearchParams, useParams } from "next/navigation";
@@ -24,6 +24,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/services/firebase";
+import { User } from "firebase/auth";
 
 interface MobileCardLayoutProps {
   cardId: string;
@@ -65,6 +66,7 @@ export function MobileCardLayout({
   const [showBackButton, setShowBackButton] = useState(true);
   const [userName, setUserName] = useState("");
   const [refLink, setRefLink] = useState("");
+  const [cardUser, setCardUser] = useState<UserData>(null);
   const router = useRouter();
 
   const { toast } = useToast();
@@ -120,6 +122,8 @@ export function MobileCardLayout({
           const userQuery = doc(db, "users", userID);
           const userSnapshot = await getDoc(userQuery);
           const user_data = userSnapshot.data();
+          //@ts-ignore
+          setCardUser(user_data);
           const referalCode = user_data.referralCode;
           const link = `${window.location.origin}/?ref=${referalCode}`;
           setRefLink(link);
@@ -162,7 +166,7 @@ export function MobileCardLayout({
   // Modal sequence handlers
   const handleCloseShareModal = () => {
     if (user?.planType === "free" && !isTrialActive) {
-        setShareModalAnimateClass("translate-y-full");
+      setShareModalAnimateClass("translate-y-full");
       setTimeout(() => {
         setShowShareModal(false);
         setTimeout(() => {
@@ -174,7 +178,38 @@ export function MobileCardLayout({
       }, 700);
 
       return;
+    } else if (!user) {
+      const createdAt = parseCreatedAt(cardUser?.createdAt);
+      const trialEnd = new Date(
+        createdAt.getTime() + cardUser?.freeTrialPeriod * 24 * 60 * 60 * 1000
+      );
+      const isTrialActive = new Date() <= trialEnd;
+      if (cardUser?.planType === "free" && !isTrialActive) {
+        setShareModalAnimateClass("translate-y-full");
+        setTimeout(() => {
+          setShowShareModal(false);
+          setTimeout(() => {
+            handleCloseContactModal();
+            setTimeout(() => {
+              setContactModalAnimateClass("translate-y-0");
+            }, 500);
+          }, 200);
+        }, 700);
+      } else {
+        setShareModalAnimateClass("translate-y-full");
+        setTimeout(() => {
+          setShowShareModal(false);
+          setTimeout(() => {
+            setShowContactModal(true);
+            setTimeout(() => {
+              setContactModalAnimateClass("translate-y-0");
+            }, 500);
+          }, 200);
+        }, 700);
+      }
+      return;
     }
+
     setShareModalAnimateClass("translate-y-full");
     setTimeout(() => {
       setShowShareModal(false);

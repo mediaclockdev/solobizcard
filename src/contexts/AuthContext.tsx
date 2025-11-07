@@ -20,7 +20,7 @@ import {
 import { doc, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 
 // ----------------- Types -----------------
-interface UserData {
+export interface UserData {
   uid: string;
   name?: string;
   email?: string;
