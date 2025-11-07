@@ -161,7 +161,7 @@ export function MobileCardLayout({
 
   // Modal sequence handlers
   const handleCloseShareModal = () => {
-    if (user.planType === "free" && !isTrialActive) {
+    if (user?.planType === "free" && !isTrialActive) {
         setShareModalAnimateClass("translate-y-full");
       setTimeout(() => {
         setShowShareModal(false);
@@ -195,9 +195,9 @@ export function MobileCardLayout({
     return new Date();
   }
 
-  const createdAt = parseCreatedAt(user.createdAt);
+  const createdAt = parseCreatedAt(user?.createdAt);
   const trialEnd = new Date(
-    createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+    createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
   );
   const isTrialActive = new Date() <= trialEnd;
 

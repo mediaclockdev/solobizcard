@@ -64,7 +64,7 @@ export function LeadsGenerated(props:any) {
 
     const cardsQuery = query(
       collection(db, "cards"),
-      where("uid", "==", user.uid)
+      where("uid", "==", user?.uid)
     );
     const cardsSnapshot = await getDocs(cardsQuery);
 
@@ -105,9 +105,9 @@ export function LeadsGenerated(props:any) {
     const isFree = user?.planType === "free";
     setIsFreePlan(isFree);
 
-    const createdAt = parseCreatedAt(user.createdAt);
+    const createdAt = parseCreatedAt(user?.createdAt);
     const trialEnd = new Date(
-      createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+      createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
     );
     const trialActive = new Date() <= trialEnd;
     setIsTrialActive(trialActive);

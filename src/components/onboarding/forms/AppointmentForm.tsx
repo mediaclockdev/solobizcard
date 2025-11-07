@@ -38,6 +38,8 @@ export function AppointmentForm({
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
   const [modelMsg, setModelMsg] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
   const { isAuthenticated, user } = useAuth();
   const storage = getStorage();
 
@@ -72,6 +74,14 @@ export function AppointmentForm({
       },
     };
     onUpdate(updatedCard);
+  };
+
+  const handleOnChange = (value) => {
+    if (isProLocked) {
+      setShowWarning(true);
+    } else {
+      handleAppointmentTypeChange(value);
+    }
   };
 
   const handleAppointmentTypeChange = (
@@ -233,6 +243,7 @@ export function AppointmentForm({
       setIsUploading(false);
     }
   };
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragActive(false);
@@ -254,16 +265,16 @@ export function AppointmentForm({
 
   const canShowCustomSection = () => {
     if (!user) return false;
-    if (user.planType !== "free") return true;
-    if (!user.createdAt) return false;
+    if (user?.planType !== "free") return true;
+    if (!user?.createdAt) return false;
     if (trialDays === null) return false; // ⏳ still loading
 
     let createdDate: Date;
-    if (typeof user.createdAt === "string") {
-      createdDate = new Date(user.createdAt);
-    } else if ("seconds" in user.createdAt) {
+    if (typeof user?.createdAt === "string") {
+      createdDate = new Date(user?.createdAt);
+    } else if ("seconds" in user?.createdAt) {
       //@ts-ignore
-      createdDate = new Date(user.createdAt?.seconds * 1000);
+      createdDate = new Date(user?.createdAt?.seconds * 1000);
     } else {
       return false;
     }
@@ -307,6 +318,30 @@ export function AppointmentForm({
 
   const appointmentType = card.appointments?.appointmentType || "booking";
 
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
+  useEffect(() => {
+    if (!user) return;
+
+    const isFree = user?.planType === "free";
+    setIsFreePlan(isFree);
+
+    const createdAt = parseCreatedAt(user?.createdAt);
+    const trialEnd = new Date(
+      createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
+    );
+    const trialActive = new Date() <= trialEnd;
+    setIsTrialActive(trialActive);
+  }, [user]);
+  const isProLocked = isFreePlan && !isTrialActive;
+  console.log("isProLocked", isProLocked);
+
   return (
     <div className="space-y-4">
       {/* Appointment Type Selection */}
@@ -330,9 +365,7 @@ export function AppointmentForm({
               name="appointmentType"
               value="booking"
               checked={appointmentType === "booking"}
-              onChange={(e) =>
-                handleAppointmentTypeChange(e.target.value as "booking")
-              }
+              onChange={(e) => handleOnChange(e.target.value as "booking")}
             />
             <span>Booking Link</span>
           </label>
@@ -349,14 +382,12 @@ export function AppointmentForm({
               value="call-to-action"
               checked={appointmentType === "call-to-action"}
               onChange={(e) =>
-                handleAppointmentTypeChange(e.target.value as "call-to-action")
+                handleOnChange(e.target.value as "call-to-action")
               }
               className="w-4 h-4 text-blue-600"
             />
             Call-to-Action
-            {trialDays !== null && canShowCustomSection() !== true && (
-              <Lock size={14} className="ml-1 text-yellow-500" />
-            )}
+            {isProLocked && <Lock size={14} className="ml-1 text-yellow-500" />}
           </label>
 
           {/* Direct Ads */}
@@ -370,15 +401,11 @@ export function AppointmentForm({
               name="appointmentType"
               value="direct-ads"
               checked={appointmentType === "direct-ads"}
-              onChange={(e) =>
-                handleAppointmentTypeChange(e.target.value as "direct-ads")
-              }
+              onChange={(e) => handleOnChange(e.target.value as "direct-ads")}
               className="w-4 h-4 text-blue-600"
             />
             Direct Ads
-            {trialDays !== null && canShowCustomSection() !== true && (
-              <Lock size={14} className="ml-1 text-yellow-500" />
-            )}
+            {isProLocked && <Lock size={14} className="ml-1 text-yellow-500" />}
           </label>
 
           {/* Lead Capture */}
@@ -394,12 +421,12 @@ export function AppointmentForm({
                 value="lead-capture"
                 checked={appointmentType === "lead-capture"}
                 onChange={(e) =>
-                  handleAppointmentTypeChange(e.target.value as "lead-capture")
+                  handleOnChange(e.target.value as "lead-capture")
                 }
                 className="w-4 h-4 text-blue-600"
               />
               Lead Capture
-              {trialDays !== null && canShowCustomSection() !== true && (
+              {isProLocked && (
                 <Lock size={14} className="ml-1 text-yellow-500" />
               )}
             </label>
@@ -499,6 +526,7 @@ export function AppointmentForm({
           <div className="space-y-2">
             <Label htmlFor="ctaLabel">Custom Button Text</Label>
             <Input
+              disabled={isProLocked}
               id="ctaLabel"
               placeholder="Schedule Meeting, Get Quote, Contact Me"
               value={card.appointments.ctaLabel || ""}
@@ -508,6 +536,7 @@ export function AppointmentForm({
           <div className="space-y-2">
             <Label htmlFor="ctaUrl">Custom Button URL</Label>
             <Input
+              disabled={isProLocked}
               id="ctaUrl"
               type="url"
               placeholder="https://example.com/contact"

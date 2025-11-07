@@ -237,7 +237,7 @@ export default function Systems() {
           const referrerUid = data.uid;
           totalReferalUsers += data.children.length;
           if (referrerUid && usersData[referrerUid]) {
-            if (usersData[referrerUid] === "admin") {
+            if (usersData[referrerUid].role === "admin") {
               //adminCount += data.children.length;
             } else if (data.children) {
               normalCount += data.children.length;

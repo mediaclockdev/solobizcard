@@ -206,8 +206,8 @@ export default function Contacts() {
           type: "lead",
           notes: userData.notes || "",
           location: userData.location || {
-            latitude: 25.7617,
-            longitude: 80.1918,
+            latitude: 25.9812,
+            longitude: -80.1484,
             city: "Florida Miami FL",
             state: "",
             country: "USA",
@@ -224,7 +224,7 @@ export default function Contacts() {
 
   useEffect(() => {
     const fetchContacts = async () => {
-      if (user && contacts.length  <= 0) {
+      if (user && contacts.length <= 0) {
         await getUserLeadContacts(user.uid);
         const defaultC = await getDefaultContact();
         if (defaultC) setDefaultContact(defaultC);
@@ -380,7 +380,7 @@ export default function Contacts() {
     });
     setIsNewContactOpen(true);
   };
-  
+
   const handleDeleteUser = async (id: string) => {
     if (confirm("Delete this contact?")) {
       try {

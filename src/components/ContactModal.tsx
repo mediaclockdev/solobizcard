@@ -82,13 +82,13 @@ export function ContactModal({
     return new Date();
   }
 
-  const createdAt = parseCreatedAt(user.createdAt);
+  const createdAt = parseCreatedAt(user?.createdAt);
   const trialEnd = new Date(
-    createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+    createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
   );
   const isTrialActive = new Date() <= trialEnd;
-  
-  console.log("users:", user.uid);
+
+  console.log("users:", user?.uid);
   console.log("createdAt:", createdAt);
   console.log("trialEnd:", trialEnd);
   console.log("isTrialActive:", isTrialActive);
@@ -419,7 +419,7 @@ export function ContactModal({
   };
 
   const handleSendContact = async () => {
-    if (!user || user.planType == "free" && !isTrialActive) {
+    if (!user || (user?.planType == "free" && !isTrialActive)) {
       setShowWarning(true);
       return;
     }
@@ -483,7 +483,7 @@ export function ContactModal({
         </div>
 
         {/* Content */}
-        
+
         <div className="overflow-y-auto rounded-t-3xl max-h-[calc(98dvh-4rem)] pt-16 pb-6">
           <div className="px-6">
             <h2 className="text-center text-xl font-semibold mb-2">
@@ -502,7 +502,7 @@ export function ContactModal({
                   Scan Paper Biz Card
                 </Button>
 
-                {user.planType === "free" && !isTrialActive ? null : (
+                {user?.planType === "free" && !isTrialActive ? null : (
                   <Button
                     onClick={() => handleSendContact()}
                     className="w-full flex items-center justify-center gap-2"
@@ -712,7 +712,6 @@ export function ContactModal({
             )}
           </div>
         </div>
-        
       </div>
       {showPermissionModal && (
         <div

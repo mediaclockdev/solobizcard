@@ -24,48 +24,44 @@ import { Plus, Minus, X } from "lucide-react";
 import Cropper from "react-easy-crop";
 
 // ---------- Compression Helper ----------
+// ---------- Compression Helper (Updated for ~100KB output) ----------
 async function compressImage(
   file: File,
   maxWidth: number,
-  quality: number
+  targetKB: number
 ): Promise<File> {
-  return new Promise(async (resolve, reject) => {
-    const compressedFile = await imageCompression(file, {
-      maxSizeMB: 0.3, // target size in MB
-      maxWidthOrHeight: 1024,
-      useWebWorker: true,
-    });
-    const img = new Image();
-    img.src = URL.createObjectURL(compressedFile);
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject("No canvas context");
+  const targetMB = targetKB / 1024; // convert KB → MB
 
-      const scale = Math.min(maxWidth / img.width, 1);
-      canvas.width = img.width * scale;
-      canvas.height = img.height * scale;
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const options = {
+    maxSizeMB: targetMB, // e.g. 0.1 MB = 100KB
+    maxWidthOrHeight: maxWidth, // keep large enough for clarity
+    useWebWorker: true,
+    initialQuality: 0.8,
+    alwaysKeepResolution: false,
+  };
 
-      canvas.toBlob(
-        (blob) => {
-          if (!blob) return reject("Compression failed");
-          const isPng = file.type === "image/png";
-          const mimeType = isPng ? "image/png" : "image/jpeg";
-          const ext = isPng ? ".png" : ".jpg";
+  try {
+    let compressedFile = await imageCompression(file, options);
 
-          resolve(
-            new File([blob], file.name.replace(/\.\w+$/, ext), {
-              type: mimeType,
-            })
-          );
-        },
-        "image/png",
-        quality
+    // If still > target, try further manual compression
+    while (compressedFile.size > targetKB * 1024) {
+      const quality = Math.max(
+        0.5,
+        0.8 - compressedFile.size / (targetKB * 2048)
       );
-    };
-    img.onerror = reject;
-  });
+      compressedFile = await imageCompression(compressedFile, {
+        ...options,
+        maxSizeMB: undefined,
+        initialQuality: quality,
+      });
+      if (quality <= 0.5) break; // avoid over-degrading
+    }
+
+    return compressedFile;
+  } catch (err) {
+    console.error("Compression failed:", err);
+    return file;
+  }
 }
 
 // ---------- Crop Helper ----------
@@ -206,7 +202,7 @@ function CropModal({
     if (imageType === "cover")
       return { ASPECT_RATIO: 448 / 270, FIXED_SIZE: { w: 448, h: 270 } };
     if (imageType === "profile")
-      return { ASPECT_RATIO: 3 / 4, FIXED_SIZE: null };
+      return { ASPECT_RATIO: 450 / 600, FIXED_SIZE: { w: 450, h: 600 } };
     if (imageType === "logo")
       return { ASPECT_RATIO: 80 / 60, FIXED_SIZE: { w: 80, h: 60 } };
     return { ASPECT_RATIO: 1 / 1, FIXED_SIZE: null };
@@ -434,7 +430,7 @@ export function ImageUploadGrid({
 
     if (cropType === "profile") {
       setIsLoading(true);
-      maxWidth = 800;
+      maxWidth = 600;
       quality = 0.85; // ~100KB
     } else if (cropType === "logo") {
       setIsLogoLoading(true);
@@ -446,7 +442,18 @@ export function ImageUploadGrid({
       quality = 0.8; // ~100KB
     }
 
-    const compressedFile = await compressImage(croppedFile, maxWidth, quality);
+    let compressedFile: File;
+
+    if (cropType === "profile") {
+      compressedFile = await compressImage(croppedFile, 600, 100); // 100KB target
+    } else if (cropType === "cover") {
+      compressedFile = await compressImage(croppedFile, 1280, 100); // 100KB target
+    } else if (cropType === "logo") {
+      compressedFile = await compressImage(croppedFile, 300, 40); // ~40KB target
+    } else {
+      compressedFile = croppedFile;
+    }
+
     let url = "";
 
     if (user?.uid) {

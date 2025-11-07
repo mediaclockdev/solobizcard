@@ -38,9 +38,9 @@ export function BrandColorSection({ card, onUpdate }: FormComponentProps) {
     if (user) {
       const isFreePlan = user?.planType === "free";
       setIsFreePlan(isFreePlan);
-      const createdAt = parseCreatedAt(user.createdAt);
+      const createdAt = parseCreatedAt(user?.createdAt);
       const trialEnd = new Date(
-        createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+        createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
       );
       const isTrialActive = new Date() <= trialEnd;
       setIsTrialActive(isTrialActive);

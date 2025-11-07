@@ -542,9 +542,9 @@ export function RevenueChart(props: any) {
     const isFree = user?.planType === "free";
 
     setIsFreePlan(isFree);
-    const createdAt = parseCreatedAt(user.createdAt);
+    const createdAt = parseCreatedAt(user?.createdAt);
     const trialEnd = new Date(
-      createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+      createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
     );
     const trialActive = new Date() <= trialEnd;
     setIsTrialActive(trialActive);

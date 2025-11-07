@@ -102,7 +102,7 @@ export default function Cards() {
   const myCardCounts = async () => {
     if (user) {
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userDoc = await getDoc(doc(db, "users", user?.uid));
         const userData = userDoc.exists() ? userDoc.data() : {};
         const planType = userData.planType || "free"; // default to free
 
@@ -379,19 +379,19 @@ export default function Cards() {
   const handleFavoriteCreateCard = async () => {
     if (user) {
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
+        const userDoc = await getDoc(doc(db, "users", user?.uid));
         const userData = userDoc.exists() ? userDoc.data() : {};
-        const planType = userData.planType || "free"; // default to free
-        const createdAt = parseCreatedAt(user.createdAt);
+        const planType = userData?.planType || "free"; // default to free
+        const createdAt = parseCreatedAt(user?.createdAt);
         const trialEnd = new Date(
-          createdAt.getTime() + user.freeTrialPeriod * 24 * 60 * 60 * 1000
+          createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
         );
         const isTrialActive = new Date() <= trialEnd;
 
         if (planType === "free" && !isTrialActive) {
           const q = query(
             collection(db, "cards"),
-            where("uid", "==", user.uid)
+            where("uid", "==", user?.uid)
           );
           const snapshot = await getDocs(q);
 
@@ -409,7 +409,7 @@ export default function Cards() {
         } else if (planType === "paid") {
           const q = query(
             collection(db, "cards"),
-            where("uid", "==", user.uid)
+            where("uid", "==", user?.uid)
           );
           const snapshot = await getDocs(q);
           if (snapshot.size >= 2) {
@@ -422,7 +422,7 @@ export default function Cards() {
             ) {
               const q = query(
                 collection(db, "cards"),
-                where("uid", "==", user.uid)
+                where("uid", "==", user?.uid)
               );
               const snapshot = await getDocs(q);
               if (snapshot.size >= 3) {
@@ -436,7 +436,7 @@ export default function Cards() {
             ) {
               const q = query(
                 collection(db, "cards"),
-                where("uid", "==", user.uid)
+                where("uid", "==", user?.uid)
               );
               const snapshot = await getDocs(q);
               if (snapshot.size >= 7) {
@@ -451,7 +451,7 @@ export default function Cards() {
             } else if (addOnPlans.length === 2) {
               const q = query(
                 collection(db, "cards"),
-                where("uid", "==", user.uid)
+                where("uid", "==", user?.uid)
               );
               const snapshot = await getDocs(q);
               console.log("Snapshot", snapshot);

@@ -37,12 +37,36 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
   const [showSignIn, setShowSignIn] = useState(false);
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
+  const [isTrialActive, setIsTrialActive] = useState(false);
+  const [isFreePlan, setIsFreePlan] = useState(false);
   const [data, setData] = useState(card.about.bio || "");
   const {
     sectionType = "aboutMe",
     customSectionTitle = "",
     aboutMe = "",
   } = cardData.about || {};
+
+  function parseCreatedAt(input: any) {
+    if (input instanceof Date) return input;
+    if (input && input.seconds) return new Date(input.seconds * 1000);
+    if (typeof input === "number") return new Date(input);
+    if (typeof input === "string") return new Date(input.replace(" at", ""));
+    return new Date();
+  }
+
+  useEffect(() => {
+    if (!user) return;
+    const isFree = user?.planType === "free";
+    setIsFreePlan(isFree);
+    const createdAt = parseCreatedAt(user?.createdAt);
+    const trialEnd = new Date(
+      createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
+    );
+    const trialActive = new Date() <= trialEnd;
+    setIsTrialActive(trialActive);
+  }, [user]);
+
+  const isProLocked = isFreePlan && !isTrialActive;
 
   useEffect(() => {
     if (showWarning) {
@@ -67,7 +91,7 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
     if (newType === "custom" && !isAuthenticated) {
       setShowSignIn(true);
       return;
-    } else if (newType === "custom" && canShowCustomSection() == false) {
+    } else if (newType === "custom" && isProLocked) {
       setShowWarning(true);
       return;
     }
@@ -129,16 +153,16 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
 
   const canShowCustomSection = () => {
     if (!user) return false;
-    if (user.planType !== "free") return true;
-    if (!user.createdAt) return false;
+    if (user?.planType !== "free") return true;
+    if (!user?.createdAt) return false;
     if (trialDays === null) return false; // ⏳ still loading
 
     let createdDate: Date;
-    if (typeof user.createdAt === "string") {
-      createdDate = new Date(user.createdAt);
-    } else if ("seconds" in user.createdAt) {
+    if (typeof user?.createdAt === "string") {
+      createdDate = new Date(user?.createdAt);
+    } else if ("seconds" in user?.createdAt) {
       //@ts-ignore
-      createdDate = new Date(user.createdAt?.seconds * 1000);
+      createdDate = new Date(user?.createdAt?.seconds * 1000);
     } else {
       return false;
     }
@@ -229,7 +253,7 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
                   <span className="text-sm text-gray-700">
                     Custom Section Title
                   </span>
-                  {trialDays !== null && canShowCustomSection() !== true && (
+                  {isProLocked && (
                     <Lock size={14} className="ml-1 text-yellow-500" />
                   )}
                 </label>
@@ -241,6 +265,7 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
           {sectionType === "custom" && (
             <div>
               <input
+                disabled={isProLocked}
                 type="text"
                 placeholder="Enter custom section title"
                 value={card.about.customSectionTitle}
@@ -268,6 +293,8 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
 
             {sectionType === "custom" && isClient && (
               <CKEditor
+                //@ts-ignore
+                disabled={isProLocked}
                 data={data}
                 onChange={(event, editor) => {
                   const html = editor.getData();
