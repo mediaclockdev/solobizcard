@@ -489,7 +489,7 @@ export function MobileCardLayout({
         animateClass={shareModalAnimateClass}
         cardData={card}
         isLocal={cardType === "local"}
-        qrCodeUrl={card.qrCode?.qrCodeUrl}
+        qrCodeUrl={`${card.qrCode?.qrCodeUrl}?selectedTab=favorites&view=true`}
       />
 
       {/* Contact Modal */}
