@@ -657,36 +657,32 @@ export default function UsersListing() {
     document.body.removeChild(link);
   };
 
-  function formatDate(dateValue) {
-    if (!dateValue) return "-";
+function formatDate(dateValue) {
+  if (!dateValue) return "-";
 
-    let dateObj;
+  let dateObj;
 
-    // Handle Firestore Timestamp or ISO string
-    if (dateValue?.toDate) {
-      dateObj = dateValue.toDate(); // Firestore timestamp
-    } else {
-      dateObj = new Date(dateValue);
-    }
-
-    if (isNaN(dateObj)) return "-";
-
-    const day = dateObj.getDate();
-    const month = dateObj.toLocaleString("default", { month: "long" });
-    const year = dateObj.getFullYear();
-
-    // Add ordinal suffix (st, nd, rd, th)
-    const suffix =
-      day % 10 === 1 && day !== 11
-        ? "st"
-        : day % 10 === 2 && day !== 12
-        ? "nd"
-        : day % 10 === 3 && day !== 13
-        ? "rd"
-        : "th";
-
-    return `${day}${suffix} ${month} ${year}`;
+  // Handle Firestore Timestamp or ISO string
+  if (dateValue?.toDate) {
+    dateObj = dateValue.toDate(); // Firestore Timestamp object
+  } else if (typeof dateValue === "string" || typeof dateValue === "number") {
+    dateObj = new Date(dateValue);
+  } else if (dateValue instanceof Date) {
+    dateObj = dateValue;
+  } else {
+    return "-";
   }
+
+  if (isNaN(dateObj.getTime())) return "-";
+
+  // Format to MM/DD/YYYY (U.S. style)
+  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+  const day = String(dateObj.getDate()).padStart(2, "0");
+  const year = dateObj.getFullYear();
+
+  return `${month}/${day}/${year}`;
+}
+
 
   // console.log("selectedUser", selectedUser);
 
@@ -1389,17 +1385,17 @@ export default function UsersListing() {
                   Referral Earning Rate:
                 </h1>
                 <p>
-                  <strong>Child affiliate earnings after monetization :</strong>{" "}
+                  <strong>Child :</strong>{" "}
                   {selectedUser.userChildEarning}%
                 </p>
                 <p>
                   <strong>
-                    Grandchild affiliate earnings after monetization :
+                    Grandchild :
                   </strong>{" "}
                   {selectedUser.userGrandChildEarning}%
                 </p>
                 <p>
-                  <strong>Member's operating cost deduction rate :</strong>{" "}
+                  <strong>Operating cost :</strong>{" "}
                   {selectedUser.operatingCostRate}%
                 </p>
               </div>
