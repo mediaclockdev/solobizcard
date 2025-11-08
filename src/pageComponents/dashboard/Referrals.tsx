@@ -195,7 +195,7 @@ export default function Referrals() {
           }))[0];
           // const userData = querySnapshot.docs[0].data() as any;
           setParentInfo(userData);
-          setDefaultCard("3b97e644-08a5-40af-bb51-57f7b0f226db");
+          setDefaultCard("5615dfda-ce61-48cf-b8b5-02d98001125b");
           // console.log("userData", userData);
           const q = query(
             collection(db, "cards"),
@@ -942,16 +942,20 @@ export default function Referrals() {
   return (
     <div className="space-y-4">
       {/* Alert Card */}
-      <Alert className="border-blue-200 bg-blue-50">
-        <Info className="h-4 w-4" />
-        <AlertTitle className="text-lg font-semibold">
-          Earn Passive Income with SoloBizCards
-        </AlertTitle>
-        <AlertDescription className="text-base mt-2">
-          Earning is easy! Get to Level-3. Refer 100+ = Level-2. When your
-          referrals also refer 100+ = Level-3 for you. Start earning at Level-3.
-        </AlertDescription>
-      </Alert>
+      
+      {refBadgesLevel < 3 && (
+        <Alert className="border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4" />
+          <AlertTitle className="text-lg font-semibold">
+            Earn Passive Income with SoloBizCards
+          </AlertTitle>
+          <AlertDescription className="text-base mt-2">
+            Earning is easy! Get to Level-3. Refer 100+ = Level-2. When your
+            referrals also refer 100+ = Level-3 for you. Start earning at
+            Level-3.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Step Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">

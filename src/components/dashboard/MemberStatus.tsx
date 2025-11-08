@@ -140,7 +140,7 @@ export function MemberStatus() {
           }))[0];
           // const userData = querySnapshot.docs[0].data() as any;
           setParentInfo(userData);
-          setDefaultCard("3b97e644-08a5-40af-bb51-57f7b0f226db");
+          setDefaultCard("5615dfda-ce61-48cf-b8b5-02d98001125b");
           // console.log("userData", userData);
           const q = query(
             collection(db, "cards"),

@@ -23,21 +23,20 @@ import { checkLocalCardExist } from "@/utils/cardStorage";
 import { Plus, Minus, X } from "lucide-react";
 import Cropper from "react-easy-crop";
 
-// ---------- Compression Helper ----------
 // ---------- Compression Helper (Updated for ~100KB output) ----------
 async function compressImage(
   file: File,
   maxWidth: number,
   targetKB: number
 ): Promise<File> {
-  const targetMB = targetKB / 1024; // convert KB → MB
+  const targetMB = targetKB / 1024;
 
   const options = {
-    maxSizeMB: targetMB, // e.g. 0.1 MB = 100KB
-    maxWidthOrHeight: maxWidth, // keep large enough for clarity
+    maxSizeMB: targetMB,
+    maxWidthOrHeight: maxWidth,
     useWebWorker: true,
-    initialQuality: 0.8,
-    alwaysKeepResolution: false,
+    initialQuality: 0.95,
+    alwaysKeepResolution: true,
   };
 
   try {
@@ -46,8 +45,8 @@ async function compressImage(
     // If still > target, try further manual compression
     while (compressedFile.size > targetKB * 1024) {
       const quality = Math.max(
-        0.5,
-        0.8 - compressedFile.size / (targetKB * 2048)
+        0.75,
+        0.92 - compressedFile.size / (targetKB * 2048)
       );
       compressedFile = await imageCompression(compressedFile, {
         ...options,
@@ -426,30 +425,30 @@ export function ImageUploadGrid({
     const oldUrl = card[fieldName] as string | undefined;
 
     let maxWidth = 1280;
-    let quality = 0.8;
+    let quality = 0.95;
 
     if (cropType === "profile") {
       setIsLoading(true);
       maxWidth = 600;
-      quality = 0.85; // ~100KB
+      quality = 0.95; // ~100KB
     } else if (cropType === "logo") {
       setIsLogoLoading(true);
       maxWidth = 300;
-      quality = 0.6; // ~25KB
+      quality = 0.95; // ~25KB
     } else if (cropType === "cover") {
       setIsCoverLoading(true);
       maxWidth = 1280;
-      quality = 0.8; // ~100KB
+      quality = 0.95; // ~100KB
     }
 
     let compressedFile: File;
 
     if (cropType === "profile") {
-      compressedFile = await compressImage(croppedFile, 600, 100); // 100KB target
+      compressedFile = await compressImage(croppedFile, 600, 200); // 100KB target
     } else if (cropType === "cover") {
-      compressedFile = await compressImage(croppedFile, 1280, 100); // 100KB target
+      compressedFile = await compressImage(croppedFile, 1280, 200); // 100KB target
     } else if (cropType === "logo") {
-      compressedFile = await compressImage(croppedFile, 300, 40); // ~40KB target
+      compressedFile = await compressImage(croppedFile, 300, 80); // ~40KB target
     } else {
       compressedFile = croppedFile;
     }

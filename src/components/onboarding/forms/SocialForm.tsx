@@ -204,14 +204,6 @@ export function SocialForm({ card, onUpdate }: FormComponentProps) {
             <Label htmlFor={key} className="flex items-center gap-2">
               <Icon className="h-4 w-4" />
               <span>{label}</span>
-
-              {isProLocked && (
-                <Lock
-                  size={14}
-                  className="ml-1 text-yellow-500"
-                  onClick={() => setShowWarning(true)}
-                />
-              )}
             </Label>
 
             <Input
@@ -223,7 +215,6 @@ export function SocialForm({ card, onUpdate }: FormComponentProps) {
               onBlur={() => handleBlur(key)}
               onChange={(e) => handleInputChange(key, e.target.value)}
               className={isLocked(key) ? "bg-gray-100 cursor-not-allowed" : ""}
-              disabled={isProLocked}
             />
           </div>
         ))}

@@ -41,7 +41,7 @@ export function AppointmentForm({
   const [isTrialActive, setIsTrialActive] = useState(false);
   const [isFreePlan, setIsFreePlan] = useState(false);
   const { isAuthenticated, user } = useAuth();
-   const [trialDays, setTrialDays] = useState<number | null>(null);
+  const [trialDays, setTrialDays] = useState<number | null>(null);
 
   const storage = getStorage();
 
@@ -107,7 +107,7 @@ export function AppointmentForm({
     }
   }, [isProLocked]);
   const handleOnChange = (value) => {
-    if (isProLocked && value!=='booking') {
+    if (isProLocked && value !== "booking") {
       setShowWarning(true);
     } else {
       handleAppointmentTypeChange(value);
@@ -237,20 +237,20 @@ export function AppointmentForm({
     try {
       setIsUploading(true);
 
-      // ✅ Compress image to around 25 KB
+      // Compress image to around 25 KB
       const options = {
-        maxSizeMB: 0.025, // 25 KB
-        maxWidthOrHeight: 800, // adjust as needed (800px width or height)
+        maxSizeMB: 0.18, // 150 KB
+        maxWidthOrHeight: 800, // adjust as needed
         useWebWorker: true,
       };
 
       const compressedFile = await imageCompression(file, options);
 
-      // ✅ Upload compressed file
+      // Upload compressed file
       const oldUrl = card.appointments.directAds?.image || null;
       const downloadURL = await uploadDirectAdsImage(compressedFile, oldUrl);
 
-      // ✅ Update Firestore
+      // Update Firestore
       const updatedCard = {
         ...card,
         appointments: {
@@ -291,7 +291,6 @@ export function AppointmentForm({
     }
   };
 
- 
   const canShowCustomSection = () => {
     if (!user) return false;
     if (user?.planType !== "free") return true;

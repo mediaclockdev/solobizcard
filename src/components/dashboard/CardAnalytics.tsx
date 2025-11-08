@@ -808,11 +808,12 @@ export function CardAnalytics({ onUpgrade, onLockClick }: CardAnalyticsProps) {
   return (
     <div className="space-y-4">
       {/* Metrics Cards */}
-      <div
-        className={`grid grid-cols-2 lg:grid-cols-6 gap-4 transition-all duration-300 ${
+      
+      {/* className={`grid grid-cols-2 lg:grid-cols-6 gap-4 transition-all duration-300 ${
           isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
-        }`}
-      >
+        }`} */}
+
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 transition-all duration-300">
         <Card className="border border-gray-200 hover:border-gray-400 hover:shadow-md transition-all cursor-pointer">
           <CardContent className="p-4">
             <div className="flex flex-col space-y-2">

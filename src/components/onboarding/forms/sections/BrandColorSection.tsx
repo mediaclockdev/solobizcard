@@ -53,20 +53,9 @@ export function BrandColorSection({ card, onUpdate }: FormComponentProps) {
         <Label className="text-sm font-medium text-foreground">
           Brand Color
         </Label>
-        {isFreePlan && !isTrialActive && (
-          <Lock
-            size={14}
-            className="ml-1 text-yellow-500"
-            onClick={() => setShowWarning(true)}
-          />
-        )}
       </div>
 
-      <div
-        className={`flex flex-col sm:flex-row sm:items-center gap-4 ${
-          isFreePlan && !isTrialActive ? "opacity-60 pointer-events-none" : ""
-        }`}
-      >
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
         {/* Color Picker + Hex Input */}
         <div className="flex items-center gap-1">
           <input

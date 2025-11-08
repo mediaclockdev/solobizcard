@@ -359,7 +359,7 @@ export default function Contacts() {
 
   const handleViewUser = (contact: any) => {
     // if (contact.email === "rob@solobizcards.com") {
-    //   navigate("/card/3b97e644-08a5-40af-bb51-57f7b0f226db");
+    //   navigate("/card/5615dfda-ce61-48cf-b8b5-02d98001125b");
     //   return;
     // }
     setSelectedContact(contact);
@@ -496,7 +496,7 @@ export default function Contacts() {
                 {contact.email === "rob@solobizcards.com" && (
                   <>
                     <a
-                      href="/card/3b97e644-08a5-40af-bb51-57f7b0f226db"
+                      href="/card/5615dfda-ce61-48cf-b8b5-02d98001125b"
                       target="_blank"
                       rel="noopener noreferrer"
                     >

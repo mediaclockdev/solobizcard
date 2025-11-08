@@ -262,11 +262,13 @@ export function Stats() {
   const isProLocked = isFreePlan && !isTrialActive;
 
   return (
-    <div
-      className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 transition-all duration-300 ${
-        isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
-      }`}
-    >
+    //     <div
+    //   className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 transition-all duration-300 ${
+    //     isProLocked ? "opacity-60 blur-[2px] pointer-events-none" : ""
+    //   }`}
+    // >
+
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 transition-all duration-300">
       <StatCard
         title="Card Views"
         value={cardView}
