@@ -107,7 +107,7 @@ export function ShareModal({
     if (url) {
       setQrCode(
         // <QRCodeSVG value={url} size={240} level="H" fgColor={cardBrandColor} />
-        <img src={`${qrCodeUrl}?selectedTab=favorites&view=true`} alt="QR Code" className="w-34 h-34" />
+        <img src={`${qrCodeUrl}`} alt="QR Code" className="w-34 h-34" />
       );
       setTimeout(() => {
         setIsLoading(false);

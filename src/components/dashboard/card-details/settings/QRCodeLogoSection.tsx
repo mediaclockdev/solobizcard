@@ -66,7 +66,7 @@ export function QRCodeLogoSection({
     setIsGenerating(true);
     try {
       if (typeof window !== "undefined") {
-        const cardUrl = `${window.location.origin}/card/${card.metadata.id}`;
+        const cardUrl = `${window.location.origin}/card/${card.metadata.id}?selectedTab=favorites&view=true`;
         let defaultLogo=logoFile;
         if(logoFile===null){
             const response = await fetch("/lovable-uploads/6e79eba6-9505-44d3-9af1-e8b13b7c46d0.png");

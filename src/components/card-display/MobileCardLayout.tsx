@@ -480,7 +480,7 @@ export function MobileCardLayout({
       <ShareModal
         isOpen={showShareModal}
         onClose={handleCloseShareModal}
-        url={`${window.location.href}?selectedTab=favorites&view=true`}
+        url={`${window.location.href}`}
         refLink={refLink}
         title={`${getFullName(card)}'s Digital Business Card`}
         cardProfile={card.profile}
@@ -489,7 +489,7 @@ export function MobileCardLayout({
         animateClass={shareModalAnimateClass}
         cardData={card}
         isLocal={cardType === "local"}
-        qrCodeUrl={`${card.qrCode?.qrCodeUrl}?selectedTab=favorites&view=true`}
+        qrCodeUrl={`${card.qrCode?.qrCodeUrl}`}
       />
 
       {/* Contact Modal */}

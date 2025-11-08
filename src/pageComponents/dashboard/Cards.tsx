@@ -205,7 +205,7 @@ export default function Cards() {
   const generatePreviewQRCode = useCallback(async (card, action) => {
     try {
       if (typeof window !== "undefined") {
-        const cardUrl = `${window.location.origin}/card/${card.metadata.id}`;
+        const cardUrl = `${window.location.origin}/card/${card.metadata.id}?selectedTab=favorites&view=true`;
         const logoPreviewUrl =
           "/lovable-uploads/6e79eba6-9505-44d3-9af1-e8b13b7c46d0.png";
         const response = await fetch(
