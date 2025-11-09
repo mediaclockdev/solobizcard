@@ -113,6 +113,8 @@ export default function WorldMap({
                   border: 2px solid white;
                   margin-bottom: 8px;
                   object-fit: cover;
+                  margin-left: auto;
+                  margin-right: auto;
                 "
                 onerror="this.src='/lovable-uploads/logo_color_correct.png'"
               />

@@ -720,11 +720,11 @@ export default function Cards() {
           <div className="absolute inset-0 bg-black/40" />
           {/* Modal Box */}
           <div className="relative bg-white rounded-lg shadow-xl p-6 z-50 w-96 text-center">
-            <h1 className="text-xl font-bold mb-4">Card Limit Reached</h1>
+            <h1 className="text-xl font-bold mb-4">Add More Pro Cards</h1>
             <p className="text-gray-600 mb-6">
               <p className="text-gray-600 mb-6">
-                You've used your 2 free cards. Upgrade your account to Pro to
-                create unlimited paid cards.
+                You can add 1 or 5 additional cards. To proceed to the pricing
+                page, click continue
               </p>
             </p>
 
@@ -742,7 +742,7 @@ export default function Cards() {
                   setTimeout(() => router.replace("/pricing"), 100);
                 }}
               >
-                Upgrade
+                Continue
               </Button>
             </div>
           </div>

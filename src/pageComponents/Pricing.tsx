@@ -145,7 +145,7 @@ const Pricing = () => {
     {
       name: "Free",
       price: { monthly: 0, annual: 0 },
-      description: "Perfect for getting started",
+      description: "2-Free cards, perfect for getting started",
       features: [
         "Professional digital business card",
         "Basic contact sharing",
@@ -166,7 +166,7 @@ const Pricing = () => {
         monthly: proUpgradeMonthly,
         annual: proUpgradeMonthlyEquivalent,
       },
-      description: `Everything you need to grow. \n Everyone gets ${freeTrialPeriod}-days Free! Pro Trial`,
+      description: `2-Paid Pro cards, everything you need to \n grow.Everyone gets ${freeTrialPeriod}-days Free! Pro \n Trial`,
       features: [
         "Everything in Free",
         "Custom CTA url link",
@@ -420,12 +420,12 @@ const Pricing = () => {
                             }`}
                             onClick={() => {
                               if (!user) {
-                                window.location.href = "/"; // or open a login modal if you prefer
+                                window.location.href = "/";
                                 return;
                               }
                               // === ONLY SHOW ALERT IF user does NOT have Pro and clicks an Add-on ===
                               const isAddon = planItem.name.startsWith("Add");
-                              const userHasPro = plan?.planName === "Pro";
+                              const userHasPro = user?.planName === "Pro";
 
                               if (isAddon && !userHasPro) {
                                 setShowAddonDialog(true); // show alert dialog
@@ -450,6 +450,7 @@ const Pricing = () => {
                             // Disable only if add-on already purchased OR Free plan is already active
                             disabled={
                               isAddonPurchased ||
+                              (planItem.name === "Pro" && isProActive) ||
                               (planItem.name === "Free" && !!user)
                             }
                           >

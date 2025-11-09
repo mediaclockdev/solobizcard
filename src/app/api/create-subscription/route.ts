@@ -517,6 +517,23 @@ export async function POST(req: Request) {
         });
       }
 
+      let paymentMethodDetails = null;
+
+      const paymentIntents = await stripe.paymentIntents.list({
+        customer: subscription.customer as string,
+        limit: 1,
+      });
+      const fallbackPaymentIntentId = paymentIntents.data[0]?.id;
+
+      const paymentIntent = await stripe.paymentIntents.retrieve(
+        fallbackPaymentIntentId,
+        {
+          expand: ["payment_method"],
+        }
+      );
+
+      paymentMethodDetails = paymentIntent.payment_method;
+
       return NextResponse.json({
         planName: product.name,
         price: price.unit_amount ? price.unit_amount / 100 : null,
@@ -528,6 +545,8 @@ export async function POST(req: Request) {
         invoiceUrl,
         subscription: subscription,
         freeTrialPeriod,
+        fallbackPaymentIntentId,
+        paymentMethod: paymentMethodDetails,
       });
     }
 

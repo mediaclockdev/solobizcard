@@ -93,6 +93,7 @@ export default function Settings() {
   const { user, isLoading: authLoading } = useAuth();
   const tabFromParams = searchParams.get("tab");
   const { logout } = useAuth();
+  const [loading, setLoading] = useState(false);
   // Set default tab based on URL parameter if present
   const currentTab =
     tabFromParams === "subscriptions" ||
@@ -262,6 +263,7 @@ export default function Settings() {
 
   formatted = formatted.replace(/^\d+/, `${day}${suffix}`);
 
+  const [paymentMethod, setPaymentMethod] = useState(null);
   const [paymentId, setPaymentId] = useState(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState(user?.lastName ?? "");
@@ -498,12 +500,16 @@ export default function Settings() {
 
   useEffect(() => {
     async function fetchPlan() {
+      setLoading(true); // start loader
       const res = await fetch("/api/create-subscription", {
         method: "POST",
         body: JSON.stringify({ userId: user?.uid, action: "get" }),
       });
       const data = await res.json();
+
+      setPaymentMethod(data.paymentMethod);
       setPlan(data);
+      setLoading(false); // start loader
     }
 
     async function getUserSubscriptions() {
@@ -1142,107 +1148,119 @@ export default function Settings() {
                   // Current active paid plan
                   <Card>
                     <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <CreditCard className="h-6 w-6 text-muted-foreground" />
-                          <div>
-                            <h3 className="font-semibold">
-                              PAID!! - SoloBizCards PRO Membership
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              Pro Upgrade + Lead Billing History
-                            </p>
-                            <p className="text-sm text-muted-foreground">
-                              {plan?.status === "trialing" ? (
-                                <p>
-                                  Trial Period: {startDate} - {endDate}
-                                  <br />
-                                  <b>
-                                    Note: The subscription will start once the
-                                    trial period is completed.
-                                  </b>
-                                </p>
-                              ) : (
-                                <p>
-                                  Subscription Period: {startDate} - {endDate}
-                                </p>
-                              )}
-                            </p>
-                          </div>
+                      {loading ? (
+                        <div className="flex justify-center items-center py-6">
+                          <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
                         </div>
-                        <div className="flex items-center gap-3">
-                          <Badge
-                            variant="secondary"
-                            className="bg-green-100 text-green-700 border-green-200"
-                          >
-                            Current
-                          </Badge>
-
-                          {plan?.subscription?.canceledAtPeriodEnd ? null : (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button size="sm" variant="outline">
-                                  Cancel
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>
-                                    {!isWithin30Days
-                                      ? "Cancel Subscription?"
-                                      : "Cannot Cancel Subscription"}
-                                  </AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    {!isWithin30Days
-                                      ? "Are you sure you want to cancel this subscription? You’ll still have access until the end of the billing period."
-                                      : "You cannot cancel the subscription because 30 days have passed since your plan started."}
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Close</AlertDialogCancel>
-                                  {!isWithin30Days && (
-                                    <AlertDialogAction
-                                      onClick={async () => {
-                                        try {
-                                          const res = await fetch(
-                                            "/api/create-subscription",
-                                            {
-                                              method: "POST",
-                                              headers: {
-                                                "Content-Type":
-                                                  "application/json",
-                                              },
-                                              body: JSON.stringify({
-                                                userId: user.uid,
-                                                action: "cancel",
-                                              }),
-                                            }
-                                          );
-                                          const data = await res.json();
-                                          if (data.error)
-                                            throw new Error(data.error);
-                                          showToast(
-                                            data.message ||
-                                              "Subscription canceled successfully!",
-                                            "success"
-                                          );
-                                        } catch (err: any) {
-                                          alert(
-                                            err.message ||
-                                              "Failed to cancel subscription"
-                                          );
-                                        }
-                                      }}
-                                    >
-                                      Yes, Cancel
-                                    </AlertDialogAction>
+                      ) : (
+                        <>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <CreditCard className="h-6 w-6 text-muted-foreground" />
+                              <div>
+                                <h3 className="font-semibold">
+                                  PAID!! - SoloBizCards PRO Membership
+                                </h3>
+                                <p className="text-sm text-muted-foreground">
+                                  Pro Upgrade + Lead Billing History
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {plan?.status === "trialing" ? (
+                                    <p>
+                                      Trial Period: {startDate} - {endDate}
+                                      <br />
+                                      <b>
+                                        Note: The subscription will start once
+                                        the trial period is completed.
+                                      </b>
+                                    </p>
+                                  ) : (
+                                    <p>
+                                      Subscription Period: {startDate} -{" "}
+                                      {endDate}
+                                    </p>
                                   )}
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
-                        </div>
-                      </div>
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <Badge
+                                variant="secondary"
+                                className="bg-green-100 text-green-700 border-green-200"
+                              >
+                                Current
+                              </Badge>
+
+                              {plan?.subscription
+                                ?.canceledAtPeriodEnd ? null : (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button size="sm" variant="outline">
+                                      Cancel
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        {!isWithin30Days
+                                          ? "Cancel Subscription?"
+                                          : "Cannot Cancel Subscription"}
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        {!isWithin30Days
+                                          ? "Are you sure you want to cancel this subscription? You’ll still have access until the end of the billing period."
+                                          : "You cannot cancel the subscription because 30 days have passed since your plan started."}
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Close
+                                      </AlertDialogCancel>
+                                      {!isWithin30Days && (
+                                        <AlertDialogAction
+                                          onClick={async () => {
+                                            try {
+                                              const res = await fetch(
+                                                "/api/create-subscription",
+                                                {
+                                                  method: "POST",
+                                                  headers: {
+                                                    "Content-Type":
+                                                      "application/json",
+                                                  },
+                                                  body: JSON.stringify({
+                                                    userId: user.uid,
+                                                    action: "cancel",
+                                                  }),
+                                                }
+                                              );
+                                              const data = await res.json();
+                                              if (data.error)
+                                                throw new Error(data.error);
+                                              showToast(
+                                                data.message ||
+                                                  "Subscription canceled successfully!",
+                                                "success"
+                                              );
+                                            } catch (err: any) {
+                                              alert(
+                                                err.message ||
+                                                  "Failed to cancel subscription"
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          Yes, Cancel
+                                        </AlertDialogAction>
+                                      )}
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                 ) : (
@@ -1320,142 +1338,151 @@ export default function Settings() {
                     <CardTitle className="text-lg">Current Plan</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="pb-3">
-                      <h3 className="font-semibold">
-                        {plan?.planName ? plan.planName : "Free Plan"}
-                      </h3>
+                    {loading ? (
+                      <div className="flex justify-center items-center py-6">
+                        <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="pb-3">
+                          <h3 className="font-semibold">
+                            {plan?.planName ? plan.planName : "Free Plan"}
+                          </h3>
 
-                      <p className="text-sm text-muted-foreground">
-                        {plan?.billing === "year" ? (
-                          <>${plan?.price} / Yearly</>
-                        ) : plan?.billing === "month" ? (
-                          <>${plan?.price} / Monthly</>
-                        ) : (
-                          <></>
-                        )}
-                      </p>
+                          <p className="text-sm text-muted-foreground">
+                            {plan?.billing === "year" ? (
+                              <>${plan?.price} / Yearly</>
+                            ) : plan?.billing === "month" ? (
+                              <>${plan?.price} / Monthly</>
+                            ) : (
+                              <></>
+                            )}
+                          </p>
 
-                      {/* Show addons only if plan is not free */}
-                      {plan?.planName?.toLowerCase() !== "free plan" &&
-                        Array.isArray(addons) &&
-                        addons.length > 0 && (
-                          <>
-                            {addons.map((addon, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2"
-                              >
-                                <div>
-                                  <h3 className="font-semibold">
-                                    {addon.name}
-                                  </h3>
-                                  <p className="text-sm text-muted-foreground">
-                                    {addon.price
-                                      ? `$${addon.price} / ${
-                                          addon.billing === "annual"
-                                            ? "Yearly"
-                                            : "Monthly"
-                                        }`
-                                      : ""}
-                                  </p>
-                                </div>
+                          {/* Show addons only if plan is not free */}
+                          {plan?.planName?.toLowerCase() !== "free plan" &&
+                            Array.isArray(addons) &&
+                            addons.length > 0 && (
+                              <>
+                                {addons.map((addon, index) => (
+                                  <div
+                                    key={index}
+                                    className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2"
+                                  >
+                                    <div>
+                                      <h3 className="font-semibold">
+                                        {addon.name}
+                                      </h3>
+                                      <p className="text-sm text-muted-foreground">
+                                        {addon.price
+                                          ? `$${addon.price} / ${
+                                              addon.billing === "annual"
+                                                ? "Yearly"
+                                                : "Monthly"
+                                            }`
+                                          : ""}
+                                      </p>
+                                    </div>
 
-                                {/* Cancel Addon Button with AlertDialog */}
-                                {/* Cancel Addon Button with AlertDialog */}
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button size="sm" variant="outline">
-                                      Cancel
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>
-                                        {!isWithin30Days
-                                          ? `Cancel Addon?`
-                                          : `Cannot Cancel Addon`}
-                                      </AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        {!isWithin30Days
-                                          ? `Are you sure you want to cancel the addon "${addon.name}"? You’ll still have access until the end of the billing period.`
-                                          : `You cannot cancel the addon "${addon.name}" because 30 days have passed since it was added.`}
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>
-                                        Close
-                                      </AlertDialogCancel>
-                                      {!isWithin30Days && (
-                                        <AlertDialogAction
-                                          onClick={async () => {
-                                            if (!addon.subscriptionId) return;
-                                            setIsLoading(true);
-                                            try {
-                                              const res = await fetch(
-                                                "/api/create-subscription",
-                                                {
-                                                  method: "POST",
-                                                  headers: {
-                                                    "Content-Type":
-                                                      "application/json",
-                                                  },
-                                                  body: JSON.stringify({
-                                                    userId: user.uid,
-                                                    action: "cancel-addon",
-                                                    addonSubscriptionId:
-                                                      addon.subscriptionId,
-                                                  }),
+                                    {/* Cancel Addon Button with AlertDialog */}
+                                    {/* Cancel Addon Button with AlertDialog */}
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button size="sm" variant="outline">
+                                          Cancel
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>
+                                            {!isWithin30Days
+                                              ? `Cancel Addon?`
+                                              : `Cannot Cancel Addon`}
+                                          </AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            {!isWithin30Days
+                                              ? `Are you sure you want to cancel the addon "${addon.name}"? You’ll still have access until the end of the billing period.`
+                                              : `You cannot cancel the addon "${addon.name}" because 30 days have passed since it was added.`}
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>
+                                            Close
+                                          </AlertDialogCancel>
+                                          {!isWithin30Days && (
+                                            <AlertDialogAction
+                                              onClick={async () => {
+                                                if (!addon.subscriptionId)
+                                                  return;
+                                                setIsLoading(true);
+                                                try {
+                                                  const res = await fetch(
+                                                    "/api/create-subscription",
+                                                    {
+                                                      method: "POST",
+                                                      headers: {
+                                                        "Content-Type":
+                                                          "application/json",
+                                                      },
+                                                      body: JSON.stringify({
+                                                        userId: user.uid,
+                                                        action: "cancel-addon",
+                                                        addonSubscriptionId:
+                                                          addon.subscriptionId,
+                                                      }),
+                                                    }
+                                                  );
+                                                  const data = await res.json();
+                                                  if (data.error)
+                                                    throw new Error(data.error);
+                                                  setIsLoading(false);
+                                                  showToast(
+                                                    data.message ||
+                                                      "Addon canceled successfully!",
+                                                    "success"
+                                                  );
+                                                  window.location.reload();
+                                                } catch (err: any) {
+                                                  setIsLoading(false);
+                                                  alert(
+                                                    err.message ||
+                                                      "Failed to cancel addon"
+                                                  );
                                                 }
-                                              );
-                                              const data = await res.json();
-                                              if (data.error)
-                                                throw new Error(data.error);
-                                              setIsLoading(false);
-                                              showToast(
-                                                data.message ||
-                                                  "Addon canceled successfully!",
-                                                "success"
-                                              );
-                                              window.location.reload();
-                                            } catch (err: any) {
-                                              setIsLoading(false);
-                                              alert(
-                                                err.message ||
-                                                  "Failed to cancel addon"
-                                              );
-                                            }
-                                          }}
-                                        >
-                                          Yes, Cancel
-                                        </AlertDialogAction>
-                                      )}
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              </div>
-                            ))}
-                          </>
-                        )}
-                    </div>
+                                              }}
+                                            >
+                                              Yes, Cancel
+                                            </AlertDialogAction>
+                                          )}
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                ))}
+                              </>
+                            )}
+                        </div>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className={`w-full ${
-                        user?.planType !== "free" &&
-                        user?.subscriptionEndDate?.toDate() > new Date()
-                          ? "cursor-not-allowed"
-                          : ""
-                      }`}
-                      onClick={async () => {
-                        if (user?.planType === "free") {
-                          window.location.href = "/pricing";
-                          return;
-                        }
-                      }}
-                    >
-                      Change Plan
-                    </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className={`w-full ${
+                            user?.planType !== "free" &&
+                            user?.subscriptionEndDate?.toDate() > new Date()
+                              ? "cursor-not-allowed"
+                              : ""
+                          }`}
+                          onClick={async () => {
+                            if (user?.planType === "free") {
+                              window.location.href = "/pricing";
+                              return;
+                            }
+                          }}
+                        >
+                          Change Plan
+                        </Button>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -1468,22 +1495,34 @@ export default function Settings() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <CreditCard className="h-5 w-5 text-muted-foreground" />
-                      <div>
-                        <p className="font-medium">Visa ending in 4242</p>
-                        <p className="text-sm text-muted-foreground">
-                          Expires 12/24
-                        </p>
+                    {loading ? (
+                      <div className="flex justify-center items-center py-6">
+                        <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
                       </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="link"
-                      className="p-0 h-auto text-primary"
-                    >
-                      Manage
-                    </Button>
+                    ) : (
+                      <>
+                        <div className="flex items-center gap-3">
+                          <CreditCard className="h-5 w-5 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium">
+                              {paymentMethod?.card?.brand} ending in{" "}
+                              {paymentMethod?.card?.last4}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Expires {paymentMethod?.card?.exp_month}/
+                              {paymentMethod?.card?.exp_year}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="link"
+                          className="p-0 h-auto text-primary"
+                        >
+                          Manage
+                        </Button>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -1494,75 +1533,26 @@ export default function Settings() {
                     <CardDescription>Recent payments.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {plan?.status === "trialing" ? (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium">{startDate}</p>
-                            <p className="text-xs text-muted-foreground">
-                              $0.00
-                            </p>
-                          </div>
-                        </div>
-                        <a href={plan?.invoicePdf} download>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </a>
+                    {loading ? (
+                      <div className="flex justify-center items-center py-6">
+                        <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
                       </div>
-                    ) : subscriptionData && subscriptionData.length > 0 ? (
-                      subscriptionData.map((sub) => {
-                        const startDate = sub.startDate?.seconds
-                          ? new Date(sub.startDate.seconds * 1000)
-                          : null;
-
-                        const formatDate = (date) => {
-                          if (!date) return "N/A";
-                          const day = date.getDate();
-                          const month = date.toLocaleString("default", {
-                            month: "long",
-                          });
-                          const year = date.getFullYear();
-
-                          const ordinal = (n) => {
-                            if (n > 3 && n < 21) return "th";
-                            switch (n % 10) {
-                              case 1:
-                                return "st";
-                              case 2:
-                                return "nd";
-                              case 3:
-                                return "rd";
-                              default:
-                                return "th";
-                            }
-                          };
-
-                          return `${day}${ordinal(day)} ${month} ${year}`;
-                        };
-
-                        return (
-                          <div
-                            key={sub.subscriptionId}
-                            className="flex items-center justify-between"
-                          >
+                    ) : (
+                      <>
+                        {plan?.status === "trialing" ? (
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-muted-foreground" />
                               <div>
                                 <p className="text-sm font-medium">
-                                  {formatDate(startDate)}
+                                  {startDate}
                                 </p>
                                 <p className="text-xs text-muted-foreground">
-                                  ${sub.planPrice}
+                                  $0.00
                                 </p>
                               </div>
                             </div>
-                            <a href={sub.invoicePdf} download>
+                            <a href={plan?.invoicePdf} download>
                               <Button
                                 size="sm"
                                 variant="ghost"
@@ -1572,10 +1562,69 @@ export default function Settings() {
                               </Button>
                             </a>
                           </div>
-                        );
-                      })
-                    ) : (
-                      <p>No billing history.</p>
+                        ) : subscriptionData && subscriptionData.length > 0 ? (
+                          subscriptionData.map((sub) => {
+                            const startDate = sub.startDate?.seconds
+                              ? new Date(sub.startDate.seconds * 1000)
+                              : null;
+
+                            const formatDate = (date) => {
+                              if (!date) return "N/A";
+                              const day = date.getDate();
+                              const month = date.toLocaleString("default", {
+                                month: "long",
+                              });
+                              const year = date.getFullYear();
+
+                              const ordinal = (n) => {
+                                if (n > 3 && n < 21) return "th";
+                                switch (n % 10) {
+                                  case 1:
+                                    return "st";
+                                  case 2:
+                                    return "nd";
+                                  case 3:
+                                    return "rd";
+                                  default:
+                                    return "th";
+                                }
+                              };
+
+                              return `${day}${ordinal(day)} ${month} ${year}`;
+                            };
+
+                            return (
+                              <div
+                                key={sub.subscriptionId}
+                                className="flex items-center justify-between"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Clock className="h-4 w-4 text-muted-foreground" />
+                                  <div>
+                                    <p className="text-sm font-medium">
+                                      {formatDate(startDate)}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      ${sub.planPrice}
+                                    </p>
+                                  </div>
+                                </div>
+                                <a href={sub.invoicePdf} download>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0"
+                                  >
+                                    <Download className="h-4 w-4" />
+                                  </Button>
+                                </a>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p>No billing history.</p>
+                        )}
+                      </>
                     )}
                   </CardContent>
                 </Card>
