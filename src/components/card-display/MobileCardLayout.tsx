@@ -146,7 +146,7 @@ export function MobileCardLayout({
           const updatedDayViews = (cardViewsByDay[dayKey] || 0) + 1;
 
           // === UPDATE ONLY IF VIEWER != OWNER ===
-          if (user?.uid !== cardData?.uid) {
+          if (cardUser?.uid !== cardData?.uid) {
             await updateDoc(cardDoc.ref, {
               cardView: currentViews + 1,
               [`cardViewsByMonth.${monthKey}`]: updatedMonthViews,
@@ -164,7 +164,7 @@ export function MobileCardLayout({
 
   // Modal sequence handlers
   const handleCloseShareModal = () => {
-    if (user?.planType === "free" && !isTrialActive) {
+    if (cardUser?.planType === "free" && !isTrialActive) {
       setShareModalAnimateClass("translate-y-full");
       setTimeout(() => {
         setShowShareModal(false);
@@ -177,7 +177,7 @@ export function MobileCardLayout({
       }, 700);
 
       return;
-    } else if (!user) {
+    } else if (!cardUser) {
       const createdAt = parseCreatedAt(cardUser?.createdAt);
       const trialEnd = new Date(
         createdAt.getTime() + cardUser?.freeTrialPeriod * 24 * 60 * 60 * 1000
@@ -229,9 +229,9 @@ export function MobileCardLayout({
     return new Date();
   }
 
-  const createdAt = parseCreatedAt(user?.createdAt);
+  const createdAt = parseCreatedAt(cardUser?.createdAt);
   const trialEnd = new Date(
-    createdAt.getTime() + user?.freeTrialPeriod * 24 * 60 * 60 * 1000
+    createdAt.getTime() + cardUser?.freeTrialPeriod * 24 * 60 * 60 * 1000
   );
   const isTrialActive = new Date() <= trialEnd;
 
@@ -250,7 +250,7 @@ export function MobileCardLayout({
   };
 
   const handleDownloadVCard = async () => {
-    if (user && cardType === "local") {
+    if (cardUser && cardType === "local") {
       //local cards can't be shared
       setLocalMessage(
         "Local cards can't saved your contacts. Please sync them."
@@ -304,7 +304,7 @@ export function MobileCardLayout({
         const updatedMonthSave = (saveContactsByMonth[monthKey] || 0) + 1;
         const updatedDaySave = (saveContactsByDay[dayKey] || 0) + 1;
         // === UPDATE ONLY IF USER IS NOT THE OWNER ===
-        if (user?.uid !== cardData?.uid) {
+        if (cardUser?.uid !== cardData?.uid) {
           await updateDoc(cardDoc.ref, {
             saveContact: currentSaveContacts + 1,
             [`saveContactsByMonth.${monthKey}`]: updatedMonthSave,
@@ -370,7 +370,7 @@ export function MobileCardLayout({
   };
 
   const handleSharedCard = () => {
-    if (user && cardType === "local") {
+    if (cardUser && cardType === "local") {
       //local cards can't be shared
       setLocalMessage("Local cards can't be shared. Please sync them.");
       setShowLocalModal(true);
