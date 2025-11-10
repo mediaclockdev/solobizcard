@@ -1,8 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/contexts/ToastContext";
-import { X, Eye, EyeOff, Check, X as Cross } from "lucide-react";
+import { X, Eye, EyeOff, Check, X as Cross, ArrowLeft } from "lucide-react";
 import { auth, db } from "@/services/firebase";
 import {
   createUserWithEmailAndPassword,
@@ -22,6 +28,7 @@ import {
   addDoc,
   serverTimestamp,
 } from "firebase/firestore";
+import { Mail } from "lucide-react";
 
 interface SignUpModalProps {
   isOpen: boolean;
@@ -42,8 +49,9 @@ export default function SignUpModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [referralCode, setReferralCode] = useState<string | null>(null);
-
+  const [confirmEmailModal, setConfirmEmailModal] = useState<boolean>(false);
   const { showToast } = useToast();
+  const [confirmEmail, setConfirmEmail] = useState("");
 
   // Capture referral code from URL
   useEffect(() => {
@@ -77,6 +85,7 @@ export default function SignUpModal({
     setName("");
     setBusinessCategory("");
     setClientsPreference("");
+    setConfirmEmail(email);
     setEmail("");
     setPassword("");
     setShowPassword(false);
@@ -386,7 +395,9 @@ export default function SignUpModal({
         "Account created successfully! Please check your email for verification before logging in.",
         "success"
       );
-      onClose();
+
+      setConfirmEmailModal(true);
+      // onClose();
       clearForm();
     } catch (error: any) {
       console.error("Signup error:", error);
@@ -397,6 +408,64 @@ export default function SignUpModal({
   };
 
   if (!isOpen) return null;
+
+  if (confirmEmailModal) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center">
+        {/* Background overlay */}
+        <div
+          className="absolute inset-0 bg-[rgba(0,0,0,0.3)] backdrop-blur-sm"
+          onClick={onClose}
+        />
+
+        {/* Modal content */}
+        <div className="relative z-10 w-full max-w-md bg-white rounded-lg shadow-lg p-8 py-10 mx-4">
+          {/* Close Button */}
+          {/* <button
+            onClick={onClose}
+            aria-label="Close"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-500 transition-all duration-200 ease-in-out"
+          >
+            <X className="w-5 h-5" />
+          </button> */}
+
+          {/* Icon */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-gray-50 p-3 rounded-full">
+              <Mail className="w-8 h-8 text-gray-600" />
+            </div>
+          </div>
+
+          {/* Title */}
+          <h2 className="text-2xl font-bold text-center mb-3">
+            Check your email
+          </h2>
+
+          {/* Description */}
+          <p className="text-gray-600 text-center mb-6">
+            We've sent confirmation instructions to{" "}
+            <span className="font-medium text-gray-900">{confirmEmail}</span>
+          </p>
+
+          {/* Success alert box */}
+          <div className="bg-green-50 text-green-700 text-sm px-4 py-3 rounded-md border border-green-200 mb-6 text-center">
+            Please check your email "spam" folder too for the confirmation link.
+            It may take a few minutes to arrive.
+          </div>
+
+          {/* Back to sign in */}
+          <div className="text-center">
+            <button
+              onClick={onShowSignIn}
+              className="text-gray-600 font-medium text-sm"
+            >
+              ← Back to sign in
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
