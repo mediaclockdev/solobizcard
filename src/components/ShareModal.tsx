@@ -263,7 +263,7 @@ export function ShareModal({
 
     const avatarURL = cardData.profilePhoto;
     const asterisks = "**********************";
-    const nameLine = `${cardBusiness?.firstName || ""} 's Solo Card`;
+    const nameLine = `${cardBusiness?.firstName || ""}'s Solo Card`;
 
     const smsContent = `${asterisks}\n${nameLine}\n${asterisks}\n${url}`;
     const smsMessage = encodeURIComponent(smsContent);
@@ -315,7 +315,7 @@ export function ShareModal({
       }
     }
     const asterisks = "**********************";
-    const nameLine = `${cardBusiness?.firstName || ""} 's Solo Card`;
+    const nameLine = `${cardBusiness?.firstName || ""}'s Solo Card`;
     const description = `${asterisks}\n${nameLine}\n${asterisks}\n`;
     const encodedDescription = encodeURIComponent(description);
 
@@ -375,7 +375,7 @@ export function ShareModal({
     }
 
     const asterisks = "**********************";
-    const nameLine = `${cardBusiness?.firstName || ""} 's Solo Card`;
+    const nameLine = `${cardBusiness?.firstName || ""}'s Solo Card`;
     const tweetText = `${asterisks}\n${nameLine}\n${asterisks}`;
     const encodedTweetText = encodeURIComponent(tweetText);
     const encodedURL = encodeURIComponent(url);
@@ -449,7 +449,7 @@ export function ShareModal({
     }
 
     const asterisks = "**********************";
-    const nameLine = `${cardBusiness?.firstName || ""} 's Solo Card`;
+    const nameLine = `${cardBusiness?.firstName || ""}'s Solo Card`;
     const message = `${asterisks}\n${nameLine}\n${asterisks}\n${url}`;
     const encodedMessage = encodeURIComponent(message);
 
