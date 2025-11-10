@@ -113,7 +113,6 @@ export function MobileCardLayout({
           where("metadata.id", "==", cardId)
         );
         const cardsSnapshot = await getDocs(cardsQuery);
-
         for (const cardDoc of cardsSnapshot.docs) {
           const cardData = cardDoc.data();
           const userID = cardDoc.data().uid;
@@ -209,7 +208,7 @@ export function MobileCardLayout({
       }
       return;
     }
-
+    console.log("Need To Test");
     setShareModalAnimateClass("translate-y-full");
     setTimeout(() => {
       setShowShareModal(false);

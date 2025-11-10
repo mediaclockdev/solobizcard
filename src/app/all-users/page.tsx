@@ -657,32 +657,41 @@ export default function UsersListing() {
     document.body.removeChild(link);
   };
 
-function formatDate(dateValue) {
-  if (!dateValue) return "-";
+  function formatDate(dateValue) {
+    if (!dateValue) return "-";
 
-  let dateObj;
+    let dateObj;
 
-  // Handle Firestore Timestamp or ISO string
-  if (dateValue?.toDate) {
-    dateObj = dateValue.toDate(); // Firestore Timestamp object
-  } else if (typeof dateValue === "string" || typeof dateValue === "number") {
-    dateObj = new Date(dateValue);
-  } else if (dateValue instanceof Date) {
-    dateObj = dateValue;
-  } else {
-    return "-";
+    // Handle Firestore Timestamp or ISO string
+    if (dateValue?.toDate) {
+      dateObj = dateValue.toDate(); // Firestore Timestamp
+    } else if (typeof dateValue === "string" || typeof dateValue === "number") {
+      dateObj = new Date(dateValue);
+    } else if (dateValue instanceof Date) {
+      dateObj = dateValue;
+    } else {
+      return "-";
+    }
+
+    if (isNaN(dateObj.getTime())) return "-";
+
+    // Format date: MM/DD/YYYY
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const year = dateObj.getFullYear();
+
+    // Format time: hh:mm AM/PM
+    let hours = dateObj.getHours();
+    const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // Convert 0 to 12-hour format
+    const formattedTime = `${String(hours).padStart(
+      2,
+      "0"
+    )}:${minutes} ${ampm}`;
+
+    return `${month}/${day}/${year} ${formattedTime}`;
   }
-
-  if (isNaN(dateObj.getTime())) return "-";
-
-  // Format to MM/DD/YYYY (U.S. style)
-  const month = String(dateObj.getMonth() + 1).padStart(2, "0");
-  const day = String(dateObj.getDate()).padStart(2, "0");
-  const year = dateObj.getFullYear();
-
-  return `${month}/${day}/${year}`;
-}
-
 
   // console.log("selectedUser", selectedUser);
 
@@ -1319,7 +1328,7 @@ function formatDate(dateValue) {
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>User Details</DialogTitle>
-            {selectedUser && (
+            {selectedUser && selectedUser.lastLogin && (
               <h6>Last Login Date : {formatDate(selectedUser.lastLogin)}</h6>
             )}
           </DialogHeader>
@@ -1385,13 +1394,10 @@ function formatDate(dateValue) {
                   Referral Earning Rate:
                 </h1>
                 <p>
-                  <strong>Child :</strong>{" "}
-                  {selectedUser.userChildEarning}%
+                  <strong>Child :</strong> {selectedUser.userChildEarning}%
                 </p>
                 <p>
-                  <strong>
-                    Grandchild :
-                  </strong>{" "}
+                  <strong>Grandchild :</strong>{" "}
                   {selectedUser.userGrandChildEarning}%
                 </p>
                 <p>

@@ -8,6 +8,7 @@ import { BusinessForm } from "@/components/onboarding/forms/BusinessForm";
 import { SocialForm } from "@/components/onboarding/forms/SocialForm";
 import { AboutForm } from "@/components/onboarding/forms/AboutForm";
 import { AppointmentForm } from "@/components/onboarding/forms/AppointmentForm";
+import { generateQRCodeWithLogo } from "@/utils/qrCodeGenerator";
 import {
   saveBusinessCard,
   isUrlNameAvailable,
@@ -26,6 +27,7 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "@/services/firebase";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const sections = ["profile", "business", "social", "about", "cta"] as const;
 
@@ -127,6 +129,56 @@ export function CardEditForm({ card, onUpdate }: CardEditFormProps) {
         );
       }
 
+      // QR CODE REGENERATION BLOCK
+      let updatedQRCode = card.qrCode;
+      try {
+        const cardUrl = `${window.location.origin}/card/${card.metadata.id}?selectedTab=favorites&view=true`;
+
+        // Use existing logo or fallback
+        let logoFile: File | null = null;
+        if (card.qrCode?.qrLogoUrl) {
+          const res = await fetch(card.qrCode.qrLogoUrl);
+          const blob = await res.blob();
+          logoFile = new File([blob], "logo.png", { type: blob.type });
+        } else {
+          // fallback logo if none selected
+          const res = await fetch(
+            "/lovable-uploads/6e79eba6-9505-44d3-9af1-e8b13b7c46d0.png"
+          );
+          const blob = await res.blob();
+          logoFile = new File([blob], "default-logo.png", { type: blob.type });
+        }
+
+        // Generate QR Code with updated brand color
+        const qrDataUrl = await generateQRCodeWithLogo(cardUrl, logoFile, {
+          width: 200,
+          margin: 2,
+          color: { dark: card.brandColor, light: "#FFFFFF" },
+        });
+
+        // Convert to blob for upload
+        const qrBlob = await (await fetch(qrDataUrl)).blob();
+
+        // Upload to Firebase Storage
+        const storage = getStorage();
+        const qrRef = ref(
+          storage,
+          `cards/${user.uid}/${card.id}/QRCode/qr_${card.metadata.id}.png`
+        );
+
+        await uploadBytes(qrRef, qrBlob);
+        const qrDownloadUrl = await getDownloadURL(qrRef);
+
+        updatedQRCode = {
+          colorSource: "brand",
+          selectedColor: card.brandColor,
+          qrCodeUrl: qrDownloadUrl,
+          qrLogoUrl: card.qrCode?.qrLogoUrl || "",
+        };
+      } catch (qrError) {
+        console.error("Failed to regenerate QR Code:", qrError);
+      }
+
       const q = query(
         collection(db, "cards"),
         where("metadata.id", "==", card.metadata.id)
@@ -183,7 +235,7 @@ export function CardEditForm({ card, onUpdate }: CardEditFormProps) {
               about: {
                 bio: card?.about?.bio || "",
                 sectionTitle: card?.about?.sectionTitle || "",
-                customSectionTitle:card?.about?.customSectionTitle ||"",
+                customSectionTitle: card?.about?.customSectionTitle || "",
                 skills: card?.about?.skills || [],
               },
               appointments: {
