@@ -240,6 +240,20 @@ export default function UsersListing() {
               }
             }
           }
+          let childEarnings = d?.userChildEarning || 0;
+
+          let grandchildEarnings = d?.userGrandChildEarning || 0;
+
+          const settingsRef = doc(db, "settings", "ReferralEarningRate");
+          const snap1 = await getDoc(settingsRef);
+          if (snap1.exists()) {
+            if (childEarnings === 0) {
+              childEarnings = snap1.data().childEarnings;
+            }
+            if (grandchildEarnings === 0) {
+              grandchildEarnings = snap1.data().grandchildEarnings;
+            }
+          }
           // Fetch latest card for this user
           const cardsRef = collection(db, "cards");
           const q = query(cardsRef, where("uid", "==", userId), limit(1));
@@ -273,8 +287,8 @@ export default function UsersListing() {
             subscriptionStartDate: d.subscriptionStartDate || null,
             subscriptionEndDate: d.subscriptionEndDate || null,
             referralCode: d.referralCode || "",
-            userChildEarning: d?.userChildEarning || 0,
-            userGrandChildEarning: d?.userGrandChildEarning || 0,
+            userChildEarning: childEarnings || 0,
+            userGrandChildEarning: grandchildEarnings || 0,
             freeTrialPeriod: d?.freeTrialPeriod || 0,
             role: d.role || "User",
             companyName: d.companyName || "",

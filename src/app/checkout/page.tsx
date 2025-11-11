@@ -88,7 +88,7 @@ const CheckoutForm = ({ plan, price, billing, userId, setIsLoading }: any) => {
           let grandchildEarnings = 0;
           let operatingCostRate = 0;
 
-          const settingsRef = doc(db, "users", user?.uid);
+          const settingsRef = doc(db, "users", parentUid);
 
           const pricingRequirement = doc(db, "settings", "PricingRequirement");
           const snapPricingRequirement = await getDoc(pricingRequirement);
