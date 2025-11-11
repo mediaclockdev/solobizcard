@@ -1499,7 +1499,8 @@ export default function Settings() {
                       <div className="flex justify-center items-center py-6">
                         <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
                       </div>
-                    ) : (
+                    ) : paymentMethod?.card?.exp_month &&
+                      paymentMethod?.card?.exp_year ? (
                       <>
                         <div className="flex items-center gap-3">
                           <CreditCard className="h-5 w-5 text-muted-foreground" />
@@ -1514,14 +1515,18 @@ export default function Settings() {
                             </p>
                           </div>
                         </div>
-                        <Button
-                          size="sm"
-                          variant="link"
-                          className="p-0 h-auto text-primary"
-                        >
-                          Manage
-                        </Button>
+                        {/* <Button
+        size="sm"
+        variant="link"
+        className="p-0 h-auto text-primary"
+      >
+        Manage
+      </Button> */}
                       </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No payment method available
+                      </p>
                     )}
                   </CardContent>
                 </Card>

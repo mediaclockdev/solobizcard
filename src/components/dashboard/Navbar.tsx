@@ -145,7 +145,17 @@ export function Navbar({
   // Load user data on component mount
   useEffect(() => {
     const loadUserInfo = () => {
+      if (user) {
+        const firstName = user.displayName || "";
+        const lastName = user.lastName || "";
+        const initials =
+          (firstName.charAt(0) || "").toUpperCase() +
+          (lastName.charAt(0) || "").toUpperCase();
+        setUserInitials(initials);
+        return;
+      }
       if (hasUserAccount()) {
+        console.log("test1");
         const userData = loadUserData();
         if (userData) {
           setUserDisplayName(userData.firstName);
@@ -153,6 +163,7 @@ export function Navbar({
           setUserInitials(userData.firstName.charAt(0).toUpperCase());
         }
       } else {
+        console.log("test2");
         const cards = loadBusinessCards();
         if (cards.length > 0) {
           const firstCard = cards[0];
@@ -166,14 +177,15 @@ export function Navbar({
         }
       }
     };
-    if (user) {
-      const firstName = user.displayName || "";
-      const lastName = user.lastName || "";
-      const initials =
-        (firstName.charAt(0) || "").toUpperCase() +
-        (lastName.charAt(0) || "").toUpperCase();
-      setUserInitials(initials);
-    }
+    // if (user) {
+    //   console.log("test3");
+    //   const firstName = user.displayName || "";
+    //   const lastName = user.lastName || "";
+    //   const initials =
+    //     (firstName.charAt(0) || "").toUpperCase() +
+    //     (lastName.charAt(0) || "").toUpperCase();
+    //   setUserInitials(initials);
+    // }
 
     loadUserInfo();
   }, [user]);
