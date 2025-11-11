@@ -69,7 +69,7 @@ export function CardDisplayContainer() {
 
       if (user && selectedTab !== "local") {
         getDataBaseCard(cardId);
-        console.log("USer", user);
+        // console.log("USer", user);
       } else {
         // For testing purposes, create a sample card if cardId is 'test-card'
         if (cardId === "test-card") {

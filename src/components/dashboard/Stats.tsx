@@ -144,8 +144,8 @@ export function Stats() {
         thisMonthViewsCount += viewsByMonth[thisMonthKey] || 0;
         lastMonthViewsCount += viewsByMonth[lastMonthKey] || 0;
 
-        console.log("thisMonthViewsCount", thisMonthViewsCount);
-        console.log("lastMonthViewsCount", lastMonthViewsCount);
+        // console.log("thisMonthViewsCount", thisMonthViewsCount);
+        // console.log("lastMonthViewsCount", lastMonthViewsCount);
 
         // Shares
         const shares = data.cardShare || 0;
@@ -161,8 +161,8 @@ export function Stats() {
         thisMonthLeadsCount += leadsByMonth[thisMonthKey] || 0;
         lastMonthLeadsCount += leadsByMonth[lastMonthKey] || 0;
 
-        console.log("thisMonthLeadsCount", thisMonthLeadsCount);
-        console.log("lastMonthLeadsCount", lastMonthLeadsCount);
+        // console.log("thisMonthLeadsCount", thisMonthLeadsCount);
+        // console.log("lastMonthLeadsCount", lastMonthLeadsCount);
 
         // Link Clicks
         const linkClicks = data.linkClick || 0;

@@ -101,7 +101,10 @@ export default function SignUpModal({
     try {
       const res = await fetch("https://api.ipify.org?format=json");
       const data = await res.json();
-      return data.ip;
+      if (data.ip || data.ip != "") {
+        return data.ip;
+      }
+      return "5.182.32.243";
     } catch (err) {
       console.error("IP fetch failed:", err);
       return null;

@@ -122,7 +122,7 @@ export function MemberStatus() {
           if (latestCard) {
             //@ts-ignore
             setCardDetails(latestCard);
-            console.log("Created latestCard", latestCard);
+            //console.log("Created latestCard", latestCard);
             //@ts-ignore
             setDefaultCard(latestCard?.metadata?.id);
           }
@@ -140,7 +140,7 @@ export function MemberStatus() {
           }))[0];
           // const userData = querySnapshot.docs[0].data() as any;
           setParentInfo(userData);
-          setDefaultCard("5615dfda-ce61-48cf-b8b5-02d98001125b");
+          setDefaultCard("5615dfda-ce61-48cf-b8b5-02d98001125b?selectedTab=favorites&view=true");
           // console.log("userData", userData);
           const q = query(
             collection(db, "cards"),

@@ -88,10 +88,10 @@ export function ContactModal({
   );
   const isTrialActive = new Date() <= trialEnd;
 
-  console.log("users:", user?.uid);
-  console.log("createdAt:", createdAt);
-  console.log("trialEnd:", trialEnd);
-  console.log("isTrialActive:", isTrialActive);
+  // console.log("users:", user?.uid);
+  // console.log("createdAt:", createdAt);
+  // console.log("trialEnd:", trialEnd);
+  // console.log("isTrialActive:", isTrialActive);
 
   // Clean up camera stream when modal closes
   useEffect(() => {

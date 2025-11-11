@@ -93,7 +93,7 @@ export function LeadsGenerated(props:any) {
       };
     });
 
-    console.log("mappedLeadData", mappedLeadData);
+    //console.log("mappedLeadData", mappedLeadData);
 
     setChartData(mappedLeadData);
     return mappedLeadData;

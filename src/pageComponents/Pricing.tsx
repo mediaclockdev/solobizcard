@@ -420,7 +420,11 @@ const Pricing = () => {
                             }`}
                             onClick={() => {
                               if (!user) {
-                                window.location.href = "/";
+                                window.open(
+                                  "/",
+                                  "_blank",
+                                  "noopener,noreferrer"
+                                );
                                 return;
                               }
                               // === ONLY SHOW ALERT IF user does NOT have Pro and clicks an Add-on ===
@@ -434,18 +438,29 @@ const Pricing = () => {
 
                               // Free plan handling
                               if (planItem.name === "Free" && !user) {
-                                window.location.href = "/";
+                                window.open(
+                                  "/",
+                                  "_blank",
+                                  "noopener,noreferrer"
+                                );
                                 return;
                               }
 
-                              // Redirect to checkout for paid plans/add-ons
-                              window.location.href = `/checkout?plan=${encodeURIComponent(
+                              // Build checkout URL
+                              const checkoutUrl = `/checkout?plan=${encodeURIComponent(
                                 planItem.name
                               )}&price=${
                                 isAnnual
                                   ? planItem.price.annual
                                   : planItem.price.monthly
                               }&billing=${isAnnual ? "annual" : "monthly"}`;
+
+                              // Always open in a new tab/window
+                              window.open(
+                                checkoutUrl,
+                                "_blank",
+                                "noopener,noreferrer"
+                              );
                             }}
                             // Disable only if add-on already purchased OR Free plan is already active
                             disabled={

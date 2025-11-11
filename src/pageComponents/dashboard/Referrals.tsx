@@ -177,7 +177,7 @@ export default function Referrals() {
           if (latestCard) {
             //@ts-ignore
             setCardDetails(latestCard);
-            console.log("Created latestCard", latestCard);
+            //console.log("Created latestCard", latestCard);
             //@ts-ignore
             setDefaultCard(latestCard?.metadata?.id);
           }
@@ -195,7 +195,9 @@ export default function Referrals() {
           }))[0];
           // const userData = querySnapshot.docs[0].data() as any;
           setParentInfo(userData);
-          setDefaultCard("5615dfda-ce61-48cf-b8b5-02d98001125b");
+          setDefaultCard(
+            "5615dfda-ce61-48cf-b8b5-02d98001125b?selectedTab=favorites&view=true"
+          );
           // console.log("userData", userData);
           const q = query(
             collection(db, "cards"),
@@ -262,6 +264,22 @@ export default function Referrals() {
             const UserGpSnap = await getDoc(usersGpQuery);
 
             if (UserGpSnap.exists()) {
+              const q = query(
+                collection(db, "cards"),
+                where("uid", "==", children[ch]),
+                limit(1)
+              );
+
+              const snapshot1 = await getDocs(q);
+              let profilePhoto = "/lovable-uploads/logo_color_correct.png";
+
+              if (!snapshot1.empty) {
+                const cardData1 = snapshot1.docs[0].data();
+                profilePhoto =
+                  cardData1?.profilePhoto ||
+                  "/lovable-uploads/logo_color_correct.png";
+              }
+
               const userData1 = UserGpSnap.data();
               referralArray.push({
                 type: "child",
@@ -269,8 +287,7 @@ export default function Referrals() {
                 name: userData1?.displayName ?? "",
                 location: { ...loc },
                 avatar:
-                  userData1?.avatarUrl ??
-                  "/lovable-uploads/logo_color_correct.png",
+                  profilePhoto ?? "/lovable-uploads/logo_color_correct.png",
               });
             }
           }
@@ -942,7 +959,7 @@ export default function Referrals() {
   return (
     <div className="space-y-4">
       {/* Alert Card */}
-      
+
       {refBadgesLevel < 3 && (
         <Alert className="border-blue-200 bg-blue-50">
           <Info className="h-4 w-4" />

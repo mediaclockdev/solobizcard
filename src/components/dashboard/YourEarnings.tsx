@@ -22,7 +22,7 @@ export function YourEarnings() {
   const [currentLevel, setCurrentLevel] = useState(0);
 
   const fetchPaidCounts = async () => {
-    console.log("User", user.uid);
+    //console.log("User", user.uid);
     const userRef = doc(db, "referrals", user.uid);
     const userSnap = await getDoc(userRef);
     if (!userSnap.exists()) return;
@@ -98,7 +98,7 @@ export function YourEarnings() {
     const netGChildEarning =
       grossGChildEarning - (grossGChildEarning * operatingCostRate) / 100;
     const sechduleAmount = Number(netChildEarning + netGChildEarning);
-    console.log("sechduleAmount", sechduleAmount);
+   // console.log("sechduleAmount", sechduleAmount);
     setScheduleAmount(sechduleAmount);
   };
   const fetchSettings = async () => {

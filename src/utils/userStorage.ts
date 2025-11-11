@@ -14,7 +14,7 @@ const USER_ROLE_KEY = "userData";
 export const saveUserData = (userData: UserAccountData): void => {
   try {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
-    console.log("User data saved:", userData);
+    // console.log("User data saved:", userData);
   } catch (error) {
     console.error("Error saving user data:", error);
   }
@@ -61,7 +61,7 @@ export const hasUserAccount = (): boolean => {
 export const clearUserData = (): void => {
   try {
     localStorage.removeItem(USER_STORAGE_KEY);
-    console.log("User data cleared");
+    // console.log("User data cleared");
   } catch (error) {
     console.error("Error clearing user data:", error);
   }

@@ -496,7 +496,7 @@ export default function Contacts() {
                 {contact.email === "rob@solobizcards.com" && (
                   <>
                     <a
-                      href="/card/5615dfda-ce61-48cf-b8b5-02d98001125b"
+                      href="/card/5615dfda-ce61-48cf-b8b5-02d98001125b?selectedTab=favorites&view=true"
                       target="_blank"
                       rel="noopener noreferrer"
                     >

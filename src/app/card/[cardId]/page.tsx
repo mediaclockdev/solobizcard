@@ -47,8 +47,9 @@ export async function generateMetadata(
 
   // Default metadata (fallback)
   let cardData: any = {
-    title: "Business Card",
-    description: "Free! biz cards for small businesses",
+    title: "Solo Biz Cards",
+    description:
+      "Digital business cards for solo entrepreneurs, small businesses and side hustlers.",
     image: imageUrl,
     url: `/card/${cardId}`,
   };
@@ -58,8 +59,9 @@ export async function generateMetadata(
     const data = cardDoc.data();
 
     cardData = {
-      title: data?.urlName || "Business Card",
-      description: "Free! biz cards for small businesses",
+      title: "Solo Biz Cards",
+      description:
+        "Digital business cards for solo entrepreneurs, small businesses and side hustlers.",
       image:
         data?.profilePhoto && data?.profilePhoto != ""
           ? data?.profilePhoto
