@@ -465,7 +465,7 @@ export function MobileCardLayout({
                 rel="noopener noreferrer"
                 className="hover:opacity-80"
               >
-                {process.env.NEXT_PUBLIC_API_LIVE_URL}
+                {process.env.NEXT_PUBLIC_API_LIVE_URL?.replace(/\/$/, "")}
               </a>
             </span>
           </div>
