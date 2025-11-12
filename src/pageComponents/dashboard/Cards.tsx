@@ -138,6 +138,7 @@ export default function Cards() {
       setIsLoading(false);
       getDataBaseCards();
     }
+    getDataBaseCards();
 
     setIsLoading(false);
     const loadedCards = loadBusinessCards();
