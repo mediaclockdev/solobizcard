@@ -154,7 +154,7 @@ export function MemberStatus() {
             ...doc.data(),
           }))[0];
           if (latestCard) {
-            console.log("Default latestCard", latestCard);
+            //console.log("Default latestCard", latestCard);
             //@ts-ignore
             setCardDetails(latestCard);
           }

@@ -294,31 +294,6 @@ export default function Referrals() {
           ch++;
         }
       }
-
-      // if (grandchildrenIP) {
-      //   let ph = 0;
-      //   for (const ip of grandchildrenIP) {
-      //     const loc = await getLocationFromIP(ip);
-      //     if (loc) {
-      //       const usersGpQuery = doc(db, "users", grandchildren[ph]);
-      //       const UserGpSnap = await getDoc(usersGpQuery);
-
-      //       if (UserGpSnap.exists()) {
-      //         const userData1 = UserGpSnap.data();
-      //         referralArray.push({
-      //           type: "grandchild",
-      //           userId: grandchildren[ph],
-      //           name: userData1?.displayName ?? "",
-      //           location: { ...loc },
-      //           avatar:
-      //             userData1?.avatarUrl ??
-      //             "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=150&h=150&fit=crop&crop=face",
-      //         });
-      //       }
-      //     }
-      //     ph++;
-      //   }
-      // }
     }
     return referralArray;
   };
@@ -679,7 +654,6 @@ export default function Referrals() {
   useEffect(() => {
     async function fetchCounts() {
       const userId = user?.uid;
-      //  console.log("userId", userId);
       const parents = await countParents(userId);
       const children = await countChildren(userId);
       setParentCount(parents);
@@ -702,13 +676,15 @@ export default function Referrals() {
       setAverageForChild(averageForChild);
     };
     if (user) fetchSettings().then(() => setHasFetchedSettings(true));
-    fetchIp();
+    if (childCount > 0) {
+      fetchIp();
+    }
     // if (user) {
     //   setIsLoading(true);
     //   fetchIp();
     //   setIsLoading(false);
     // }
-  }, [parentCount, childCount]);
+  }, [window.location, refBadgesLevel, parentCount, childCount]);
 
   const referrals = [
     {

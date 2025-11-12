@@ -503,30 +503,33 @@ export default function UsersListing() {
   //   }
   // };
 
-  async function deleteFolderRecursive(folderRef: any) {
-    const list = await listAll(folderRef);
+  async function deleteFolderRecursive(...folderRefs: any[]) {
+    for (const folderRef of folderRefs) {
+      const list = await listAll(folderRef);
 
-    // Delete all files in this folder
-    await Promise.all(list.items.map((fileRef) => deleteObject(fileRef)));
+      // Delete all files in this folder
+      await Promise.all(list.items.map((fileRef) => deleteObject(fileRef)));
 
-    // Recursively delete subfolders
-    await Promise.all(
-      list.prefixes.map((subFolderRef) => deleteFolderRecursive(subFolderRef))
-    );
+      // Recursively delete subfolders
+      await Promise.all(
+        list.prefixes.map((subFolderRef) => deleteFolderRecursive(subFolderRef))
+      );
+    }
   }
 
   const handleDeleteUser = async (userId: string) => {
     if (!confirm("Are you sure you want to deactivate this user?")) return;
 
     try {
-      // 1️⃣ Mark user as inactive
+      // 1️ Mark user as inactive
       const userRef = doc(db, "users", userId);
       await updateDoc(userRef, {
+        avatarUrl:"",
         status: "inactive",
         deletedAt: serverTimestamp(),
       });
 
-      // 2️⃣ Delete all cards in Firestore where uid = userId
+      // 2Delete all cards in Firestore where uid = userId
       const cardsQuery = query(
         collection(db, "cards"),
         where("uid", "==", userId)
@@ -537,9 +540,11 @@ export default function UsersListing() {
       );
       await Promise.all(deleteCardPromises);
 
-      // 3️⃣ Delete all files in storage under cards/{userId}/ recursively
+      // 3️Delete all files in storage under cards/{userId}/ recursively
       const folderRef = ref(storage, `cards/${userId}/`);
-      await deleteFolderRecursive(folderRef);
+      const userFolderRef = ref(storage, `avatars/${userId}/`);
+
+      await deleteFolderRecursive(folderRef, userFolderRef);
 
       showToast(
         "User deactivated, cards deleted, and storage cleaned successfully.",
