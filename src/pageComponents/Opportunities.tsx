@@ -50,7 +50,7 @@ const Opportunities = () => {
           {/* Passive Income, Income Calculator, and Flyer Generator Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-12">
             {/* Passive Income Card */}
-            <Card className="lg:col-span-3 overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow">
+            <Card className="lg:col-span-2 overflow-hidden border-none shadow-lg hover:shadow-xl transition-shadow">
               <div className="bg-gradient-to-r from-solo-blue to-solo-blue-light p-8 text-white">
                 <DollarSign size={48} strokeWidth={1.5} className="mb-4" />
                 <h2 className="text-3xl font-bold mb-2">Earn Passive Income</h2>
@@ -83,7 +83,7 @@ const Opportunities = () => {
             </Card>
 
             {/* Flyer Generator Card */}
-            {/* <Card
+            <Card
               className="group overflow-hidden border-none shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:scale-105 hover:-translate-y-1 active:scale-95 active:shadow-md"
               onClick={() =>
                 window.open("https://ikram-final.vercel.app/", "_blank")
@@ -104,7 +104,7 @@ const Opportunities = () => {
                   Create your custom flyers
                 </p>
               </div>
-            </Card> */}
+            </Card>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-12">
