@@ -421,7 +421,7 @@ const Pricing = () => {
                             onClick={() => {
                               if (!user) {
                                 window.open(
-                                  "/",
+                                  process.env.NEXT_PUBLIC_API_LIVE_URL,
                                   "_blank",
                                   "noopener,noreferrer"
                                 );
@@ -439,7 +439,7 @@ const Pricing = () => {
                               // Free plan handling
                               if (planItem.name === "Free" && !user) {
                                 window.open(
-                                  "/",
+                                  process.env.NEXT_PUBLIC_API_LIVE_URL,
                                   "_blank",
                                   "noopener,noreferrer"
                                 );
