@@ -26,6 +26,8 @@ import {
   CardClassicTemplateUpload,
   CardTraditionalTemplateUpload,
   SoloCardsSiteMap,
+  ActivationRequests,
+  ApprovedUsersList,
 } from "@/components/dashboard/systems";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "@/services/firebase";
@@ -247,8 +249,10 @@ export default function Systems() {
 
         adminCount = users.length - normalCount;
         const totalReferrals = totalReferalUsers;
+
         const adminPercentage =
-          totalReferrals > 0 ? (adminCount / users.length) * 100 : 0;
+          adminCount > 0 ? (adminCount / users.length) * 100 : 0;
+
         const normalPercentage =
           totalReferrals > 0 ? (normalCount / users.length) * 100 : 0;
 
@@ -418,6 +422,9 @@ export default function Systems() {
           ]}
         />
       </div>
+
+      <ActivationRequests />
+      <ApprovedUsersList />
 
       {/* Members Graph */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-4">
