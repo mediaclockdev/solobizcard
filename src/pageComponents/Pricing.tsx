@@ -25,6 +25,7 @@ import { Badge } from "@/components/ui/badge";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/services/firebase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 import {
   Tooltip,
@@ -58,10 +59,11 @@ const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(true);
   // For AlertDialog
   const [showAddonDialog, setShowAddonDialog] = useState(false);
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
 
   const [discount, setDiscount] = useState(0);
   const [freeTrialPeriod, setFreeTrialPeriod] = useState(0);
-
+  const router = useRouter();
   const [proUpgradeMonthly, setProUpgradeMonthly] = useState(0);
   const [proUpgradeMonthlyEquivalent, setProUpgradeMonthlyEquivalent] =
     useState(0);
@@ -420,11 +422,13 @@ const Pricing = () => {
                             }`}
                             onClick={() => {
                               if (!user) {
-                                window.open(
-                                  process.env.NEXT_PUBLIC_API_LIVE_URL,
-                                  "_blank",
-                                  "noopener,noreferrer"
-                                );
+                                // window.open(
+                                //   process.env.NEXT_PUBLIC_API_LIVE_URL,
+                                //   "_blank",
+                                //   "noopener,noreferrer"
+                                // );
+                                // return;
+                                setShowLoginAlert(true);
                                 return;
                               }
                               // === ONLY SHOW ALERT IF user does NOT have Pro and clicks an Add-on ===
@@ -496,24 +500,121 @@ const Pricing = () => {
         </div>
 
         {/* === NEW: Dialog === */}
-        <AlertDialog open={showAddonDialog} onOpenChange={setShowAddonDialog}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Pro Plan Required</AlertDialogTitle>
-              <AlertDialogDescription>
-                Activate the Pro plan first before purchasing add-ons.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                className="bg-primary hover:bg-primary/90 text-primary-foreground ring-offset-background"
-                onClick={() => setShowAddonDialog(false)}
-              >
-                Close
-              </AlertDialogCancel>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        {showAddonDialog && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            {/* === Background Overlay (dark + blur) === */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+            {/* === Modal Box === */}
+            <div className="relative bg-white backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-8 z-50 w-full max-w-md text-center transition-all duration-300">
+              {/* Icon */}
+              <div className="flex justify-center mb-4">
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-7 h-7"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01M21 12A9 9 0 113 12a9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+                Pro Plan Required
+              </h2>
+
+              {/* Message */}
+              <p className="text-gray-700 mb-8 leading-relaxed">
+                Activate the{" "}
+                <span className="font-medium text-gray-900">Pro Plan</span>{" "}
+                first before purchasing add-ons.
+              </p>
+
+              {/* Actions */}
+              <div className="flex justify-center">
+                <Button
+                  onClick={() => setShowAddonDialog(false)}
+                  className="px-6 py-2 rounded-lg bg-primary text-white hover:bg-primary/90"
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {showLoginAlert && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+            {/* === Background Overlay (dark + blur) === */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+            {/* === Modal Box === */}
+            <div className="relative bg-white backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-8 z-50 w-full max-w-md text-center transition-all duration-300">
+              {/* Icon */}
+              <div className="flex justify-center mb-4">
+                <div className="w-14 h-14 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-7 h-7"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12A9 9 0 113 12a9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+                2-Card Free Plan Required
+              </h2>
+
+              {/* Message */}
+              <p className="text-gray-700 mb-8 leading-relaxed">
+                Create a{" "}
+                <span className="font-medium text-gray-900">Free Plan</span>{" "}
+                first before purchasing or upgrading to the Pro Plan.
+              </p>
+
+              {/* Actions */}
+              <div className="flex justify-center gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowLoginAlert(false)}
+                  className="px-6 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowLoginAlert(false);
+                    setTimeout(() => router.replace("/?signIn=true"), 200);
+                    // Optional: redirect or open sign-up page
+                    // window.open(process.env.NEXT_PUBLIC_API_LIVE_URL, "_blank", "noopener,noreferrer");
+                  }}
+                  className="px-6 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Sign In
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Benefits Section */}
         <div className="text-center mb-12">
