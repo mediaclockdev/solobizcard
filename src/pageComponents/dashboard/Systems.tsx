@@ -26,8 +26,10 @@ import {
   CardClassicTemplateUpload,
   CardTraditionalTemplateUpload,
   SoloCardsSiteMap,
-  ActivationRequests,
-  ApprovedUsersList,
+  // ActivationRequests,
+  // ApprovedUsersList,
+  // PaymentDueUsersList,
+  // PaymentDueSummary,
 } from "@/components/dashboard/systems";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "@/services/firebase";
@@ -59,6 +61,8 @@ export default function Systems() {
 
   const [allPublicMessagesPerce, setAllPublicMessagesPerce] = useState(0);
   const [alladminMessagesPerce, setAllAdminMessagesPerce] = useState(0);
+
+  const [loadDataLoading, setLoadDataLoading] = useState(true);
 
   // Calculations for Referrals Requirements
   const l3Total = l2Child ? parseInt(l2Child) * parseInt(l2Child) : 0;
@@ -423,8 +427,16 @@ export default function Systems() {
         />
       </div>
 
-      <ActivationRequests />
+      {/* <ActivationRequests />
       <ApprovedUsersList />
+      <PaymentDueSummary
+        setLoadDataLoading={setLoadDataLoading}
+        loadDataLoading={loadDataLoading}
+      />
+      <PaymentDueUsersList
+        setLoadDataLoading={setLoadDataLoading}
+        loadDataLoading={loadDataLoading}
+      /> */}
 
       {/* Members Graph */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-4 gap-y-4">
