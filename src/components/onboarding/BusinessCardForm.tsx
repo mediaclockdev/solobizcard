@@ -329,7 +329,7 @@ export function BusinessCardForm({
         navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
         setTimeout(() => {
           window.location.href = `/dashboard/cards?selectedTab=${selectedTab}`;
-        }, 500);
+        }, 300);
       }
     }
   };
