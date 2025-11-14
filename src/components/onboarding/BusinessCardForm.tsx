@@ -95,12 +95,32 @@ export function BusinessCardForm({
     fetchImage();
   }, []);
 
+  // function getDaySuffix(day) {
+  //   if (day >= 11 && day <= 13) return `${day}th`;
+  //   switch (day % 10) {
+  //     case 1:
+  //       return `${day}st`;
+  //     case 2:
+  //       return `${day}nd`;
+  //     case 3:
+  //       return `${day}rd`;
+  //     default:
+  //       return `${day}th`;
+  //   }
+  // }
+
+  // const now = new Date();
+  // const year = now.getFullYear(); // 2025
+  // const month = now.toLocaleString("en-US", { month: "long" }); // Nov
+  // const day = getDaySuffix(now.getDate());
+
   const copyImageServerSide = async (
     sourcePath: string,
     userId: string,
     cardId: string,
     imageType: string
   ) => {
+    //const destPath = `cards/${year}/${month}/${day}/${userId}/${cardId}/${imageType}_copy_${Date.now()}.jpg`;
     const destPath = `cards/${userId}/${cardId}/${imageType}_copy_${Date.now()}.jpg`;
     try {
       const response = await fetch("/api/firebase-image", {
@@ -307,6 +327,9 @@ export function BusinessCardForm({
         navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
       } else {
         navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
+        setTimeout(() => {
+          window.location.reload(); // 🔄 Force full refresh
+        }, 200);
       }
     }
   };
