@@ -221,7 +221,7 @@ export function CardGrid({
                         {card.metadata?.isPublic ? "Public" : "Private"}
                       </span>
                       <div className="relative">
-                        {user && activeTab !== "favorites" && (
+                        {activeTab !== "favorites" && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
