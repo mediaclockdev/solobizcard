@@ -236,18 +236,19 @@ const CheckoutForm = ({ plan, price, billing, userId, setIsLoading }: any) => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-8 shadow-lg w-full lg:w-2/3 border border-gray-100">
+    <div className="bg-white rounded-2xl p-8 shadow-lg w-full lg:w-2/2 border border-gray-100">
       {/* Heading */}
-      <h1 className="text-3xl font-extrabold mb-2 text-gray-900">Checkout</h1>
-      <p className="text-gray-500 mb-8">Complete your subscription below.</p>
 
       <Button
         variant="outline"
         className="mb-6 hover:bg-gray-100 transition"
-        onClick={() => history.back()}
+        onClick={() => router.push("/pricing")}
       >
         &larr; Back
       </Button>
+
+      <h1 className="text-3xl font-extrabold mb-2 text-gray-900">Checkout</h1>
+      <p className="text-gray-500 mb-8">Complete your subscription below.</p>
 
       {/* Payment method */}
       <div className="mb-8">
@@ -419,55 +420,120 @@ const CheckoutPage = () => {
       </div>
     );
   }
+
   return (
     <Elements stripe={stripePromise}>
-      <div className="min-h-screen bg-gray-50 py-12 px-4">
-        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
-          {/* Checkout form */}
-          <CheckoutForm
-            plan={plan}
-            price={calculatedPrice}
-            billing={billing}
-            userId={userId}
-            setIsLoading={setIsLoading}
-          />
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center py-10 px-4">
+        <div className="max-w-6xl w-full bg-white rounded-3xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-2">
+          {/* LEFT SIDE = BRAND + ORDER */}
+          <div className="bg-indigo-600 text-white p-10 flex flex-col justify-between">
+            {/* BRAND */}
+            <div>
+              <img
+                src="/lovable-uploads/6e79eba6-9505-44d3-9af1-e8b13b7c46d0.png"
+                alt="SoloBizCards Logo"
+                className="h-14 mb-8"
+              />
+              {/* <img src="/logo.png" alt="Brand Logo" className="h-14 mb-8" /> */}
 
-          {/* Order Summary */}
-          <div className="w-full lg:w-1/3 bg-white rounded-2xl p-8 shadow-lg border border-gray-100 sticky top-24 self-start">
-            <h2 className="text-2xl font-bold mb-6 text-gray-900">
-              Order Summary
-            </h2>
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-semibold text-gray-900 text-lg">{plan}</p>
-                  <p className="text-gray-500">
-                    {billing === "annual"
-                      ? "Yearly Billing"
-                      : "Monthly Billing"}
-                  </p>
-                </div>
-                <p className="font-semibold text-indigo-600 text-lg">
-                  ${calculatedPrice}
-                </p>
-              </div>
+              <h2 className="text-3xl font-extrabold mb-2">
+                Upgrade Your Plan
+              </h2>
+              <p className="text-indigo-100 mb-10">
+                Unlock premium features & improve productivity.
+              </p>
 
-              <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between text-gray-700">
-                  <span className="text-lg">Subtotal</span>
-                  <span className="text-lg">${calculatedPrice}</span>
+              {/* Order Summary */}
+              <div className="bg-indigo-500/40 backdrop-blur-sm p-6 rounded-xl space-y-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-xl font-semibold">{plan}</p>
+                    <p className="text-sm opacity-80">
+                      {billing === "annual"
+                        ? "Yearly Billing"
+                        : "Monthly Billing"}
+                    </p>
+                  </div>
+                  <p className="text-3xl font-bold">${calculatedPrice}</p>
                 </div>
-                <div className="flex justify-between font-bold text-2xl text-gray-900">
-                  <span>Order Total</span>
-                  <span>${calculatedPrice}</span>
+
+                <div className="border-t border-indigo-300/40 pt-4 text-sm opacity-90">
+                  Access to all premium features • Priority support • Faster
+                  performance
                 </div>
               </div>
             </div>
+
+            {/* Footer */}
+            <p className="text-xs mt-10 opacity-70">
+              Secure Payment • Stripe Encrypted • 100% Safe
+            </p>
+          </div>
+
+          {/* RIGHT SIDE = PAYMENT FORM */}
+          <div className="p-10 bg-white">
+            <CheckoutForm
+              plan={plan}
+              price={calculatedPrice}
+              billing={billing}
+              userId={userId}
+              setIsLoading={setIsLoading}
+            />
           </div>
         </div>
       </div>
     </Elements>
   );
+
+  // return (
+  //   <Elements stripe={stripePromise}>
+  //     <div className="min-h-screen bg-gray-50 py-12 px-4">
+  //       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
+  //         {/* Checkout form */}
+  //         <CheckoutForm
+  //           plan={plan}
+  //           price={calculatedPrice}
+  //           billing={billing}
+  //           userId={userId}
+  //           setIsLoading={setIsLoading}
+  //         />
+
+  //         {/* Order Summary */}
+  //         <div className="w-full lg:w-1/3 bg-white rounded-2xl p-8 shadow-lg border border-gray-100 sticky top-24 self-start">
+  //           <h2 className="text-2xl font-bold mb-6 text-gray-900">
+  //             Order Summary
+  //           </h2>
+  //           <div className="space-y-6">
+  //             <div className="flex justify-between items-center">
+  //               <div>
+  //                 <p className="font-semibold text-gray-900 text-lg">{plan}</p>
+  //                 <p className="text-gray-500">
+  //                   {billing === "annual"
+  //                     ? "Yearly Billing"
+  //                     : "Monthly Billing"}
+  //                 </p>
+  //               </div>
+  //               <p className="font-semibold text-indigo-600 text-lg">
+  //                 ${calculatedPrice}
+  //               </p>
+  //             </div>
+
+  //             <div className="border-t pt-4 space-y-2">
+  //               <div className="flex justify-between text-gray-700">
+  //                 <span className="text-lg">Subtotal</span>
+  //                 <span className="text-lg">${calculatedPrice}</span>
+  //               </div>
+  //               <div className="flex justify-between font-bold text-2xl text-gray-900">
+  //                 <span>Order Total</span>
+  //                 <span>${calculatedPrice}</span>
+  //               </div>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   </Elements>
+  // );
 };
 
 export default CheckoutPage;
