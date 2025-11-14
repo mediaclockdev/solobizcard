@@ -328,7 +328,7 @@ export function BusinessCardForm({
       } else {
         navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
         setTimeout(() => {
-          window.location.href=window.location.href;
+          window.location.href = `/dashboard/cards?selectedTab=${selectedTab}`;
         }, 500);
       }
     }
