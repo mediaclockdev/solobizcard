@@ -328,8 +328,8 @@ export function BusinessCardForm({
       } else {
         navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
         setTimeout(() => {
-          window.location.reload(); // 🔄 Force full refresh
-        }, 200);
+          window.location.href=window.location.href;
+        }, 500);
       }
     }
   };
