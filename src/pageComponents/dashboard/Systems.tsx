@@ -286,11 +286,23 @@ export default function Systems() {
       const allAdmPubMessagesCount =
         Number(adminMessageCount) + Number(publicMessageCount);
 
+      // const publicMshPerc =
+      //   (userPublicData.count * 100) / allAdmPubMessagesCount;
+
       const publicMshPerc =
-        (userPublicData.count * 100) / allAdmPubMessagesCount;
+        allAdmPubMessagesCount > 0
+          ? (userPublicData.count * 100) / allAdmPubMessagesCount
+          : 0;
+
       setAllPublicMessagesPerce(publicMshPerc);
 
-      const adminMshPerc = (userData.count * 100) / allAdmPubMessagesCount;
+      // const adminMshPerc = (userData.count * 100) / allAdmPubMessagesCount;
+
+      const adminMshPerc =
+        allAdmPubMessagesCount > 0
+          ? (userData.count * 100) / allAdmPubMessagesCount
+          : 0;
+
       setAllAdminMessagesPerce(adminMshPerc);
 
       setAdminMessageCount(userData.count);
