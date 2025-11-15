@@ -16,7 +16,7 @@ export function CardNameSection({
   const [suggestion, setSuggestion] = useState<string>("");
   const [inputValue, setInputValue] = useState(card.urlName || "");
   const handleInputChange = (field: string, value: string) => {
-    const formattedValue = value.replace(/[^a-zA-Z\s-]/g, "");
+    const formattedValue = value.replace(/[^a-zA-Z0-9\s-]/g, "");
 
     // 2. Split keys for nested object
     const keys = field.split(".");
@@ -68,7 +68,13 @@ export function CardNameSection({
         setIsAvailable(available);
 
         if (!available) {
-          setSuggestion(await generateUniqueUrlName(card.urlName, card.metadata?.id,selectedTab == "favorites" ? true : false));
+          setSuggestion(
+            await generateUniqueUrlName(
+              card.urlName,
+              card.metadata?.id,
+              selectedTab == "favorites" ? true : false
+            )
+          );
         } else {
           setSuggestion("");
         }
