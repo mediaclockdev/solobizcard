@@ -77,6 +77,7 @@ export function CardDetailsTabs({
           cardId={cardId}
           qrCodeUrl={qrCodeUrl}
           onUpgrade={onUpgrade}
+          selectedTab={selectedTab}
         />
       </TabsContent>
 

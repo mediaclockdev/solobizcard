@@ -220,10 +220,20 @@ export default function Cards() {
           margin: 2,
           color: { dark: card.brandColor, light: "#FFFFFF" },
         });
+
         const res = await fetch(qrDataUrl);
         const qrBlob = await res.blob();
 
         if (activeTab === "local") {
+          const localQRDataUrl = await generateQRCodeWithLogo(
+            process.env.NEXT_PUBLIC_API_LIVE_URL,
+            defaultLogo,
+            {
+              width: 200,
+              margin: 2,
+              color: { dark: card.brandColor, light: "#FFFFFF" },
+            }
+          );
           const cards = loadBusinessCards();
           const newcard = cards.find((c) => c.metadata.id === card.metadata.id);
           if (newcard) {
@@ -235,17 +245,50 @@ export default function Cards() {
                 qrCodeUrl: qrDataUrl,
                 qrLogoUrl: logoPreviewUrl || "",
               },
+
+              localQRCode: {
+                colorSource: "brand",
+                selectedColor: card.brandColor,
+                qrCodeUrl: localQRDataUrl,
+                qrLogoUrl: logoPreviewUrl || "",
+              },
             };
             saveBusinessCard(updatedCard);
-            setTimeout(() => {
+            // setTimeout(() => {
+            //   navigate(`/dashboard/cards/${card.metadata.id}?option=edit`);
+            // }, 200);
+            if (action === "details") {
               navigate(`/dashboard/cards/${card.metadata.id}?option=edit`);
-            }, 200);
+            } else if (action === "preview") {
+              navigate(`/card/${card.metadata.id}?selectedTab=${activeTab}`);
+            } else {
+              navigate(`/dashboard/cards/${card.metadata.id}`);
+            }
           }
         } else {
+          function getDaySuffix(day) {
+            if (day >= 11 && day <= 13) return `${day}th`;
+            switch (day % 10) {
+              case 1:
+                return `${day}st`;
+              case 2:
+                return `${day}nd`;
+              case 3:
+                return `${day}rd`;
+              default:
+                return `${day}th`;
+            }
+          }
+
+          const now = new Date();
+          const year = now.getFullYear(); // 2025
+          const month = now.toLocaleString("en-US", { month: "long" }); // Nov
+          const day = getDaySuffix(now.getDate());
+
           const storage = getStorage();
           const qrRef = ref(
             storage,
-            `cards/${user?.uid}/${card.id}/QRCode/qr_${card.metadata.id}.png`
+            `cards/${year}/${month}/${day}/${user?.uid}/${card.id}/QRCode/qr_${card.metadata.id}.png`
           );
 
           await uploadBytes(qrRef, qrBlob);

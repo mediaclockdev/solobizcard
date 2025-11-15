@@ -479,7 +479,12 @@ export function MobileCardLayout({
       <ShareModal
         isOpen={showShareModal}
         onClose={handleCloseShareModal}
-        url={`${window.location.href}`}
+        //url={`${window.location.href}`}
+        url={`${
+          cardType === "local"
+            ? process.env.NEXT_PUBLIC_API_LIVE_URL
+            : window.location.href
+        }`}
         refLink={refLink}
         title={`${getFullName(card)}'s Digital Business Card`}
         cardProfile={card.profile}
@@ -488,7 +493,11 @@ export function MobileCardLayout({
         animateClass={shareModalAnimateClass}
         cardData={card}
         isLocal={cardType === "local"}
-        qrCodeUrl={`${card.qrCode?.qrCodeUrl}`}
+        qrCodeUrl={
+          cardType === "local"
+            ? `${card.localQRCode?.qrCodeUrl}`
+            : `${card.qrCode?.qrCodeUrl}`
+        }
       />
 
       {/* Contact Modal */}

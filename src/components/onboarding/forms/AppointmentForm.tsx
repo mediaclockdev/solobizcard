@@ -31,6 +31,7 @@ export function AppointmentForm({
   card,
   onUpdate,
   isEditMode,
+  selectedTab = "local",
 }: FormComponentProps) {
   const [dragActive, setDragActive] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
@@ -74,8 +75,7 @@ export function AppointmentForm({
     const trialActive = new Date() <= trialEnd;
     setIsTrialActive(trialActive);
   }, [user]);
-  const isProLocked = isFreePlan && !isTrialActive;
-  console.log("isProLocked", isProLocked);
+  const isProLocked = selectedTab != "local" && isFreePlan && !isTrialActive;
 
   const handleInputChange = (field: string, value: string) => {
     const updatedCard = {
@@ -107,7 +107,7 @@ export function AppointmentForm({
     }
   }, [isProLocked]);
   const handleOnChange = (value) => {
-    if (isProLocked && value !== "booking") {
+    if (isProLocked && value !== "booking" && selectedTab != "local") {
       setShowWarning(true);
     } else {
       handleAppointmentTypeChange(value);
@@ -117,21 +117,22 @@ export function AppointmentForm({
   const handleAppointmentTypeChange = (
     value: "booking" | "call-to-action" | "direct-ads" | "lead-capture"
   ) => {
-    if (
-      (value === "call-to-action" ||
-        value === "direct-ads" ||
-        value === "lead-capture") &&
-      !isAuthenticated
-    ) {
-      const message =
-        value === "call-to-action"
-          ? "This is a premium feature. Please log in to access Call-to-Action."
-          : "This is a premium feature. Please log in to access Direct Ads.";
+    // if (
+    //   (value === "call-to-action" ||
+    //     value === "direct-ads" ||
+    //     value === "lead-capture") &&
+    //   !isAuthenticated
+    // ) {
+    //   const message =
+    //     value === "call-to-action"
+    //       ? "This is a premium feature. Please log in to access Call-to-Action."
+    //       : "This is a premium feature. Please log in to access Direct Ads.";
 
-      setModelMsg(message);
-      setShowSignIn(true);
-      return;
-    } else if (
+    //   setModelMsg(message);
+    //   setShowSignIn(true);
+    //   return;
+    // } else
+    if (
       (value === "call-to-action" ||
         value === "direct-ads" ||
         value === "lead-capture") &&
@@ -151,6 +152,25 @@ export function AppointmentForm({
     onUpdate(updatedCard);
   };
 
+  function getDaySuffix(day) {
+    if (day >= 11 && day <= 13) return `${day}th`;
+    switch (day % 10) {
+      case 1:
+        return `${day}st`;
+      case 2:
+        return `${day}nd`;
+      case 3:
+        return `${day}rd`;
+      default:
+        return `${day}th`;
+    }
+  }
+
+  const now = new Date();
+  const year = now.getFullYear(); // 2025
+  const month = now.toLocaleString("en-US", { month: "long" }); // Nov
+  const day = getDaySuffix(now.getDate());
+
   /**
    * ✅ Upload Direct Ads image to Firebase Storage
    */
@@ -158,9 +178,9 @@ export function AppointmentForm({
     file: File,
     oldUrl?: string | null
   ): Promise<string> => {
-    const filePath = `/cards/${user?.uid}/${card.id}/directAds/${Date.now()}-${
-      file.name
-    }`;
+    const filePath = `/cards/${year}/${month}/${day}/${user?.uid}/${
+      card.id
+    }/directAds/${Date.now()}-${file.name}`;
     const storageRef = ref(storage, filePath);
 
     await uploadBytes(storageRef, file);
@@ -292,10 +312,13 @@ export function AppointmentForm({
   };
 
   const canShowCustomSection = () => {
-    if (!user) return false;
+    if (selectedTab == "local") {
+      return true;
+    }
+    if (!user) return true;
     if (user?.planType !== "free") return true;
     if (!user?.createdAt) return false;
-    if (trialDays === null) return false; // ⏳ still loading
+    if (trialDays === null) return false;
 
     let createdDate: Date;
     if (typeof user?.createdAt === "string") {
@@ -391,7 +414,9 @@ export function AppointmentForm({
               className="w-4 h-4 text-blue-600"
             />
             Call-to-Action
-            {isProLocked && <Lock size={14} className="ml-1 text-yellow-500" />}
+            {isProLocked && selectedTab != "local" && (
+              <Lock size={14} className="ml-1 text-yellow-500" />
+            )}
           </label>
 
           {/* Direct Ads */}
@@ -409,7 +434,9 @@ export function AppointmentForm({
               className="w-4 h-4 text-blue-600"
             />
             Direct Ads
-            {isProLocked && <Lock size={14} className="ml-1 text-yellow-500" />}
+            {isProLocked && selectedTab != "local" && (
+              <Lock size={14} className="ml-1 text-yellow-500" />
+            )}
           </label>
 
           {/* Lead Capture */}
@@ -430,7 +457,7 @@ export function AppointmentForm({
                 className="w-4 h-4 text-blue-600"
               />
               Lead Capture
-              {isProLocked && (
+              {isProLocked && selectedTab != "local" && (
                 <Lock size={14} className="ml-1 text-yellow-500" />
               )}
             </label>
@@ -530,7 +557,7 @@ export function AppointmentForm({
           <div className="space-y-2">
             <Label htmlFor="ctaLabel">Custom Button Text</Label>
             <Input
-              disabled={isProLocked}
+              disabled={isProLocked && selectedTab != "local"}
               id="ctaLabel"
               placeholder="Schedule Meeting, Get Quote, Contact Me"
               value={card.appointments.ctaLabel || ""}
@@ -540,7 +567,7 @@ export function AppointmentForm({
           <div className="space-y-2">
             <Label htmlFor="ctaUrl">Custom Button URL</Label>
             <Input
-              disabled={isProLocked}
+              disabled={isProLocked && selectedTab != "local"}
               id="ctaUrl"
               type="url"
               placeholder="https://example.com/contact"

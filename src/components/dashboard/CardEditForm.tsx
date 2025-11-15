@@ -41,13 +41,32 @@ export function CardEditForm({ card, onUpdate }: CardEditFormProps) {
   const { showToast } = useToast();
   const { user } = useAuth();
 
+  function getDaySuffix(day) {
+    if (day >= 11 && day <= 13) return `${day}th`;
+    switch (day % 10) {
+      case 1:
+        return `${day}st`;
+      case 2:
+        return `${day}nd`;
+      case 3:
+        return `${day}rd`;
+      default:
+        return `${day}th`;
+    }
+  }
+
+  const now = new Date();
+  const year = now.getFullYear(); // 2025
+  const month = now.toLocaleString("en-US", { month: "long" }); // Nov
+  const day = getDaySuffix(now.getDate());
+
   const copyImageServerSide = async (
     sourcePath: string,
     userId: string,
     cardId: string,
     imageType: string
   ) => {
-    const destPath = `cards/${userId}/${cardId}/${imageType}_copy_${Date.now()}.jpg`;
+    const destPath = `cards/${year}/${month}/${day}/${userId}/${cardId}/${imageType}_copy_${Date.now()}.jpg`;
     try {
       const response = await fetch("/api/firebase-image", {
         method: "POST",
@@ -75,8 +94,8 @@ export function CardEditForm({ card, onUpdate }: CardEditFormProps) {
     }
 
     // Check URL name uniqueness (excluding current card)
-    if (!isUrlNameAvailable(card.urlName, card.metadata.id)) {
-      const suggestion = generateUniqueUrlName(card.urlName);
+    if (await !isUrlNameAvailable(card.urlName, card.metadata.id)) {
+      const suggestion = await generateUniqueUrlName(card.urlName);
       showToast(
         `"${card.urlName}" is already taken. Try "${suggestion}" instead.`,
         "error"
@@ -159,11 +178,30 @@ export function CardEditForm({ card, onUpdate }: CardEditFormProps) {
         // Convert to blob for upload
         const qrBlob = await (await fetch(qrDataUrl)).blob();
 
+        function getDaySuffix(day) {
+          if (day >= 11 && day <= 13) return `${day}th`;
+          switch (day % 10) {
+            case 1:
+              return `${day}st`;
+            case 2:
+              return `${day}nd`;
+            case 3:
+              return `${day}rd`;
+            default:
+              return `${day}th`;
+          }
+        }
+
+        const now = new Date();
+        const year = now.getFullYear(); // 2025
+        const month = now.toLocaleString("en-US", { month: "long" }); // Nov
+        const day = getDaySuffix(now.getDate());
+
         // Upload to Firebase Storage
         const storage = getStorage();
         const qrRef = ref(
           storage,
-          `cards/${user.uid}/${card.id}/QRCode/qr_${card.metadata.id}.png`
+          `cards/${year}/${month}/${day}/${user.uid}/${card.id}/QRCode/qr_${card.metadata.id}.png`
         );
 
         await uploadBytes(qrRef, qrBlob);

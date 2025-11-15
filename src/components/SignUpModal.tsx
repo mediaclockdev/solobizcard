@@ -101,13 +101,19 @@ export default function SignUpModal({
     try {
       const res = await fetch("https://api.ipify.org?format=json");
       const data = await res.json();
-      if (data.ip || data.ip != "") {
+
+      // Check if valid IP
+      if (data?.ip && data.ip.trim() !== "") {
         return data.ip;
       }
+
+      // Fallback IP if empty or invalid
       return "5.182.32.243";
     } catch (err) {
       console.error("IP fetch failed:", err);
-      return null;
+
+      // Fallback IP if API breaks
+      return "5.182.32.243";
     }
   };
 

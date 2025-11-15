@@ -188,12 +188,16 @@ export const isUrlNameAvailable = async (
   }
 };
 
-export const generateUniqueUrlName = (baseName: string): string => {
+export const generateUniqueUrlName = async (
+  baseName: string,
+  excludeCardId?: string,
+  dBCards?: boolean
+): Promise<string> => {
   try {
     let counter = 1;
     let uniqueName = baseName;
 
-    while (!isUrlNameAvailable(uniqueName)) {
+    while (!(await isUrlNameAvailable(uniqueName, excludeCardId, dBCards))) {
       counter++;
       uniqueName = `${baseName}-${counter}`;
     }

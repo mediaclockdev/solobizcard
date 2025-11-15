@@ -36,29 +36,35 @@ export function CardNameSection({ card, onUpdate }: CardNameSectionProps) {
 
   // Check availability when urlName changes
   useEffect(() => {
-    if (urlName?.trim() && urlName !== card.urlName) {
-      const available = isUrlNameAvailable(urlName, card.metadata.id);
-      //  setIsAvailable(available);
+    const checkUrlName = async () => {
+      if (urlName?.trim() && urlName !== card.urlName) {
+        const available = await isUrlNameAvailable(urlName, card.metadata.id);
 
-      if (!available) {
-        setSuggestion(generateUniqueUrlName(urlName));
+        setIsAvailable(available);
+
+        if (!available) {
+          const uniqueName = await generateUniqueUrlName(urlName);
+          setSuggestion(uniqueName);
+        } else {
+          setSuggestion("");
+        }
       } else {
+        setIsAvailable(null);
         setSuggestion("");
       }
-    } else {
-      setIsAvailable(null);
-      setSuggestion("");
-    }
+    };
+
+    checkUrlName();
   }, [urlName, card.urlName, card.metadata.id]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!urlName?.trim()) {
       return showToast("Card Name is required", "error");
       return;
     }
 
-    if (!isUrlNameAvailable(urlName, card.metadata.id)) {
-      const newSuggestion = generateUniqueUrlName(urlName);
+    if (await !isUrlNameAvailable(urlName, card.metadata.id)) {
+      const newSuggestion = await generateUniqueUrlName(urlName);
 
       return showToast("Card Name Already Exists", "error");
 
@@ -116,6 +122,7 @@ export function CardNameSection({ card, onUpdate }: CardNameSectionProps) {
           <div className="space-y-3">
             <div className="relative">
               <Input
+                readOnly
                 type="text"
                 value={urlName}
                 onChange={(e) => setUrlName(e.target.value)}
@@ -168,14 +175,14 @@ export function CardNameSection({ card, onUpdate }: CardNameSectionProps) {
               </div>
             )}
 
-            <Button
+            {/* <Button
               variant="outline"
               size="sm"
               onClick={handleSave}
               disabled={!urlName?.trim() || isAvailable === false}
             >
               Save
-            </Button>
+            </Button> */}
           </div>
         </div>
       </CardContent>

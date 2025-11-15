@@ -26,9 +26,30 @@ export async function POST(req: Request) {
       }
     }
 
+      function getDaySuffix(day) {
+    if (day >= 11 && day <= 13) return `${day}th`;
+    switch (day % 10) {
+      case 1:
+        return `${day}st`;
+      case 2:
+        return `${day}nd`;
+      case 3:
+        return `${day}rd`;
+      default:
+        return `${day}th`;
+    }
+  }
+
+  const now = new Date();
+  const year = now.getFullYear(); // 2025
+  const month = now.toLocaleString("en-US", { month: "long" }); // Nov
+  const day = getDaySuffix(now.getDate());
+
+
+
     // Define source and destination
     const srcFile = adminBucket.file(cleanPath);
-    const destPath = `cards/${userId}/${cardId}/${imageType}_copy_${Date.now()}.jpg`;
+    const destPath = `cards/${year}/${month}/${day}/${userId}/${cardId}/${imageType}_copy_${Date.now()}.jpg`;
     const destFile = adminBucket.file(destPath);
    // return NextResponse.json({ srcFile,destPath,destFile }, { status: 200 });
     // Copy file inside the bucket

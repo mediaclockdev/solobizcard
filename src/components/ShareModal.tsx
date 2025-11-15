@@ -113,7 +113,6 @@ export function ShareModal({
         setIsLoading(false);
       }, 1000);
     }
-    console.log("NewURL==>", url);
   }, [url, qrCodeUrl]);
 
   const handleCopy = async () => {
@@ -165,6 +164,12 @@ export function ShareModal({
 
   const handleEmailShare = async () => {
     try {
+      if (isLocal) {
+        // setShowUpgradeToPro(true);
+        setShowPermissionModal(true);
+        return;
+      }
+
       const cardsQuery = query(
         collection(db, "cards"),
         where("metadata.id", "==", cardData.metadata.id)
@@ -221,10 +226,13 @@ export function ShareModal({
   };
 
   const handleTextShare = async () => {
-    // if (isLocal || !user) {
-    //   // setShowUpgradeToPro(true);
-    //   setShowPermissionModal(true);
-    // } else {
+  
+    if (isLocal) {
+      // setShowUpgradeToPro(true);
+      setShowPermissionModal(true);
+      return;
+    }
+    // else {
     const cardsQuery = query(
       collection(db, "cards"),
       where("metadata.id", "==", cardData.metadata.id)
@@ -274,10 +282,10 @@ export function ShareModal({
   };
 
   const handleLinkedInShare = async () => {
-    // if (isLocal || !user) {
-    //   setShowPermissionModal(true);
-    //   return;
-    // }
+    if (isLocal) {
+      setShowPermissionModal(true);
+      return;
+    }
 
     const cardsQuery = query(
       collection(db, "cards"),
@@ -333,10 +341,10 @@ export function ShareModal({
   };
 
   const handleTwitterShare = async () => {
-    // if (isLocal || !user) {
-    //   setShowPermissionModal(true);
-    //   return;
-    // }
+    if (isLocal) {
+      setShowPermissionModal(true);
+      return;
+    }
 
     const cardsQuery = query(
       collection(db, "cards"),
@@ -407,10 +415,10 @@ export function ShareModal({
   };
 
   const handleWhatsAppShare = async () => {
-    // if (isLocal || !user) {
-    //   setShowPermissionModal(true);
-    //   return;
-    // }
+    if (isLocal) {
+      setShowPermissionModal(true);
+      return;
+    }
 
     const cardsQuery = query(
       collection(db, "cards"),
@@ -477,10 +485,10 @@ export function ShareModal({
   };
 
   const handleFacebookShare = async () => {
-    // if (isLocal || !user) {
-    //   setShowPermissionModal(true);
-    //   return;
-    // }
+    if (isLocal) {
+      setShowPermissionModal(true);
+      return;
+    }
 
     const cardsQuery = query(
       collection(db, "cards"),
@@ -533,10 +541,10 @@ export function ShareModal({
   };
 
   const handleInstagramShare = async () => {
-    // if (isLocal || !user) {
-    //   setShowPermissionModal(true);
-    //   return;
-    // }
+    if (isLocal) {
+      setShowPermissionModal(true);
+      return;
+    }
 
     const cardsQuery = query(
       collection(db, "cards"),
@@ -1097,8 +1105,9 @@ export function ShareModal({
             {/* Message */}
             <p className="text-gray-600 mb-8 leading-relaxed">
               You need to{" "}
-              <span className="font-medium text-gray-800">sign in</span>
-              to access this page. Please log in with your account.
+              <span className="font-medium text-gray-800">create a FREE! </span>
+              account to access and share these features. Please create an
+              account now.
             </p>
 
             {/* Actions */}

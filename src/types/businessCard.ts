@@ -3,10 +3,11 @@ export interface BusinessCard {
   id?: string;
   uid?: string;
   qrCode?: any;
+  localQRCode?: any;
   sync?: boolean;
-  isActive?:boolean;
+  isActive?: boolean;
   urlName: string;
-  badgeLevel?:string | number;
+  badgeLevel?: string | number;
   profilePhoto: string;
   coverImage: string;
   companyLogo: string;
@@ -55,8 +56,8 @@ export interface BusinessCard {
     bio: string;
     sectionTitle: string;
     skills: string[];
-    customSectionTitle?:string;
-    sectionType?:string;
+    customSectionTitle?: string;
+    sectionType?: string;
   };
   appointments: {
     appointmentType:
@@ -99,12 +100,12 @@ export interface BusinessCardFormProps {
   onSectionChange: (section: FormSection) => void;
   getFullName: (card: BusinessCard) => string;
   hasUnsavedChanges: boolean;
-  selectedTab?:string
+  selectedTab?: string;
 }
 
 export interface FormComponentProps {
   card: BusinessCard;
   onUpdate: (card: BusinessCard) => void;
   isEditMode?: boolean;
-  selectedTab?:string
+  selectedTab?: string;
 }

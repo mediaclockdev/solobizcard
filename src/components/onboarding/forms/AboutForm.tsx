@@ -31,7 +31,11 @@ const CKEditor = dynamic<{
   { ssr: false }
 );
 
-export function AboutForm({ card, onUpdate }: FormComponentProps) {
+export function AboutForm({
+  card,
+  onUpdate,
+  selectedTab = "local",
+}: FormComponentProps) {
   const { cardData, setCardData } = useContext(CardDataContext);
   const { isAuthenticated, user } = useAuth();
   const [showSignIn, setShowSignIn] = useState(false);
@@ -66,8 +70,8 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
     setIsTrialActive(trialActive);
   }, [user]);
 
-  const isProLocked = isFreePlan && !isTrialActive;
- 
+  const isProLocked = selectedTab != "local" && isFreePlan && !isTrialActive;
+
   useEffect(() => {
     if (showWarning) {
       document.body.classList.add("overflow-hidden");
@@ -93,10 +97,11 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
   };
 
   const handleSectionTypeChange = (newType) => {
-    if (newType === "custom" && !isAuthenticated) {
-      setShowSignIn(true);
-      return;
-    } else if (newType === "custom" && isProLocked) {
+    // if (newType === "custom" && !isAuthenticated) {
+    //   setShowSignIn(true);
+    //   return;
+    // } else
+    if (newType === "custom" && isProLocked && selectedTab != "local") {
       setShowWarning(true);
       return;
     }
@@ -119,7 +124,7 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
     };
     onUpdate(updatedCard);
   };
- 
+
   const handleCustomTitleChange = (e) => {
     setCardData((prev) => ({
       ...prev,
@@ -258,7 +263,7 @@ export function AboutForm({ card, onUpdate }: FormComponentProps) {
                   <span className="text-sm text-gray-700">
                     Custom Section Title
                   </span>
-                  {isProLocked && (
+                  {isProLocked && selectedTab != "local" && (
                     <Lock size={14} className="ml-1 text-yellow-500" />
                   )}
                 </label>

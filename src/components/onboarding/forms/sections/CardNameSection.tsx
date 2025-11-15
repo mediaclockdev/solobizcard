@@ -68,7 +68,7 @@ export function CardNameSection({
         setIsAvailable(available);
 
         if (!available) {
-          setSuggestion(generateUniqueUrlName(card.urlName));
+          setSuggestion(await generateUniqueUrlName(card.urlName, card.metadata?.id,selectedTab == "favorites" ? true : false));
         } else {
           setSuggestion("");
         }

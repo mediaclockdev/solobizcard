@@ -133,11 +133,30 @@ export function QRCodeLogoSection({
 
       const res = await fetch(qrCodePreview);
       const qrBlob = await res.blob();
+        function getDaySuffix(day) {
+    if (day >= 11 && day <= 13) return `${day}th`;
+    switch (day % 10) {
+      case 1:
+        return `${day}st`;
+      case 2:
+        return `${day}nd`;
+      case 3:
+        return `${day}rd`;
+      default:
+        return `${day}th`;
+    }
+  }
+
+  const now = new Date();
+  const year = now.getFullYear(); // 2025
+  const month = now.toLocaleString("en-US", { month: "long" }); // Nov
+  const day = getDaySuffix(now.getDate());
+
 
       const storage = getStorage();
       const qrRef = ref(
         storage,
-        `cards/${user.uid}/${card.id}/QRCode/qr_${card.metadata.id}.png`
+        `cards/${year}/${month}/${day}/${user.uid}/${card.id}/QRCode/qr_${card.metadata.id}.png`
       );
 
       await uploadBytes(qrRef, qrBlob);

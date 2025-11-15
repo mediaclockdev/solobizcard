@@ -122,9 +122,28 @@ async function uploadImage(
     }
   }
 
+  function getDaySuffix(day) {
+    if (day >= 11 && day <= 13) return `${day}th`;
+    switch (day % 10) {
+      case 1:
+        return `${day}st`;
+      case 2:
+        return `${day}nd`;
+      case 3:
+        return `${day}rd`;
+      default:
+        return `${day}th`;
+    }
+  }
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.toLocaleString("en-US", { month: "long" });
+  const day = getDaySuffix(now.getDate());
+
   const storageRef = ref(
     storage,
-    `cards/${userId}/${cardId}/${imageType}_${Date.now()}.jpg`
+    `cards/${year}/${month}/${day}/${userId}/${cardId}/${imageType}_${Date.now()}.jpg`
   );
 
   await uploadBytes(storageRef, file);

@@ -419,7 +419,12 @@ export function ContactModal({
   };
 
   const handleSendContact = async () => {
-    if ((user?.planType == "free" && !isTrialActive)) {
+    if (isLocal) {
+      setShowPermissionModal(true);
+      return;
+    }
+
+    if (user?.planType == "free" && !isTrialActive) {
       setShowWarning(true);
       return;
     }
@@ -752,10 +757,10 @@ export function ContactModal({
             {/* Message */}
             <p className="text-gray-600 mb-8 leading-relaxed">
               You need to{" "}
-              <span className="font-medium text-gray-800">sign in</span>
-              to access this page. Please log in with your account.
+              <span className="font-medium text-gray-800">create a FREE! </span>
+              account to access and share these features. Please create an
+              account now.
             </p>
-
             {/* Actions */}
             <div className="flex justify-center gap-4">
               <Button
