@@ -162,6 +162,7 @@ export function PaymentDueUsersList(props) {
             userName: record.userName,
             month: currentMonth,
             year: currentYear,
+            amount: record.amount,
           }),
         });
 
