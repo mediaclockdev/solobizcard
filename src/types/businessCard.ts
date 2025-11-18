@@ -79,6 +79,12 @@ export interface BusinessCard {
       url?: string;
     };
   };
+  cardView: 0;
+  cardShare: 0;
+  leadsGenerated: 0;
+  linkClick: 0;
+  adsView: 0;
+  saveContact: 0;
   metadata: {
     id: string;
     createdAt: string;

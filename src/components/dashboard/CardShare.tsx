@@ -12,6 +12,7 @@ import {
   Linkedin,
   Twitter,
   MessageCircle,
+  ExternalLink,
 } from "lucide-react";
 import { BusinessCard } from "@/types/businessCard";
 import { getFullName } from "@/utils/businessCard";
@@ -34,6 +35,10 @@ export function CardShare({ card, cardId, qrCodeUrl }: CardShareProps) {
   //     });
   //   }
   // };
+
+  const localCardsDemo = loadBusinessCards();
+  const selectedCardDemo = localCardsDemo.find((c) => c.metadata.id === cardId);
+  const selectedTabDemo = selectedCardDemo ? "local" : "favorites";
 
   const externalLink = useMemo(() => {
     if (typeof window !== "undefined") {
@@ -398,16 +403,30 @@ export function CardShare({ card, cardId, qrCodeUrl }: CardShareProps) {
             <p className="text-sm text-muted-foreground text-center">
               Copy the link below to share your card:
             </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleViewClick}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Link
+              </Button>
 
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleViewClick}
-            >
-              <Copy className="mr-2 h-4 w-4" />
-              Copy Link
-            </Button>
-
+              <Button
+                variant="outline"
+                className="flex-[2]"
+                onClick={() =>
+                  window.open(
+                    `${window.location.origin}/card/${cardId}?selectedTab=${selectedTabDemo}&view=true`,
+                    "_blank"
+                  )
+                }
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                View
+              </Button>
+            </div>
             <Separator />
 
             <p className="text-sm text-muted-foreground text-center">

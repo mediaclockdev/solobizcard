@@ -72,7 +72,6 @@ export function SystemInfo() {
         );
         const snapshot = await getDocs(q);
         const todayCount = snapshot.size;
-        console.log("Today's card count:", todayCount);
         setUserCardsCount(todayCount);
 
         const messageQuery = query(

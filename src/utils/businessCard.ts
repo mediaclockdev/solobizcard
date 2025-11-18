@@ -25,7 +25,8 @@ export const hasUserInput = (card: BusinessCard): boolean => {
     card.business.email ||
     card.business.phone ||
     card.business.website ||
-    card.about.bio ||card.about?.customSectionTitle||
+    card.about.bio ||
+    card.about?.customSectionTitle ||
     card.profilePhoto ||
     Object.values(card.social).some((value) => value?.trim())
   );
@@ -152,6 +153,12 @@ export const createInitialCard = (): BusinessCard => ({
     ctaLabel: "",
     ctaUrl: "",
   },
+  cardView: 0,
+  cardShare: 0,
+  leadsGenerated: 0,
+  linkClick: 0,
+  adsView: 0,
+  saveContact: 0,
   metadata: {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),

@@ -155,7 +155,6 @@ export function Navbar({
         return;
       }
       if (hasUserAccount()) {
-        console.log("test1");
         const userData = loadUserData();
         if (userData) {
           setUserDisplayName(userData.firstName);
@@ -163,7 +162,6 @@ export function Navbar({
           setUserInitials(userData.firstName.charAt(0).toUpperCase());
         }
       } else {
-        console.log("test2");
         const cards = loadBusinessCards();
         if (cards.length > 0) {
           const firstCard = cards[0];

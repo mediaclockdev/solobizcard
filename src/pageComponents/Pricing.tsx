@@ -128,7 +128,6 @@ const Pricing = () => {
         body: JSON.stringify({ userId: user?.uid, action: "get" }),
       });
       const data = await res.json();
-      console.log("Data", data);
       setPlan(data);
     }
 
@@ -282,13 +281,24 @@ const Pricing = () => {
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             Choose the best plan for your business
           </h1>
-          <p className="text-xl text-muted-foreground mb-8">
+          <p className="text-xl text-muted-foreground mb-4">
             Everyone gets{" "}
             <span className="text-primary font-semibold">
               {freeTrialPeriod}-days Free! Pro Trial
             </span>
             . Start free and upgrade as you grow.
           </p>
+          {/* Money-back guarantee + icon in one line */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <p className="text-xl text-muted-foreground">
+              30-day money back guarantee
+            </p>
+            <img
+              src="/lovable-uploads/30-money back.png"
+              alt="SoloBizCards Logo"
+              className="h-14 w-14 object-contain"
+            />
+          </div>
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mb-8">

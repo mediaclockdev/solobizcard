@@ -155,7 +155,7 @@ export default function Referrals() {
       const grandchildren = userData.grandchildren || [];
       const parent = userData.parentUid || null;
       setRefBadgesLevel(userData.badgeLevel);
-      console.log("refBadgesLevel", refBadgesLevel);
+
       if (parent) {
         const parentRef = doc(db, "users", parent);
         const parentSnap = await getDoc(parentRef);
@@ -211,7 +211,6 @@ export default function Referrals() {
             ...doc.data(),
           }))[0];
           if (latestCard) {
-            console.log("Default latestCard", latestCard);
             //@ts-ignore
             setCardDetails(latestCard);
           }
@@ -276,8 +275,10 @@ export default function Referrals() {
               if (!snapshot1.empty) {
                 const cardData1 = snapshot1.docs[0].data();
                 profilePhoto =
-                  cardData1?.profilePhoto ||
-                  "/lovable-uploads/logo_color_correct.png";
+                  cardData1?.metadata?.isPublic != true
+                    ? "/lovable-uploads/private_card_logo.png"
+                    : cardData1?.profilePhoto ||
+                      "/lovable-uploads/logo_color_correct.png";
               }
 
               const userData1 = UserGpSnap.data();
@@ -331,7 +332,6 @@ export default function Referrals() {
       setRgrandchildEarnings(earningData.userGrandChildEarning);
 
       const MNR = settings.l2Child;
-      console.log("MNR from USER settings:", MNR);
       setMNR?.(MNR);
 
       const l4Multiplier = settings.l4Multiplier;
@@ -886,12 +886,14 @@ export default function Referrals() {
             }
           }
           const snapshot = await getDocs(q);
-          if (snapshot.empty) return { ...referral, badgeLevel, memberLevel };
+          if (snapshot.empty)
+            return { ...referral, badgeLevel, memberLevel, isPublic: false };
           const cardData = snapshot.docs[0].data();
           const latestCardId = cardData?.metadata?.id || null;
           const profilePhoto = cardData?.profilePhoto || null;
           const firstName = cardData?.profile?.firstName || null;
           const lastName = cardData?.profile?.lastName || null;
+          const isPublic = cardData?.metadata?.isPublic != true ? true : false;
           const cardName = cardData?.id || null;
 
           return {
@@ -902,11 +904,11 @@ export default function Referrals() {
             lastName,
             cardName,
             badgeLevel,
+            isPublic,
             memberLevel,
           };
         })
       );
-      console.log("sorted", results);
       setEnrichedReferrals(results);
     };
 
@@ -978,7 +980,7 @@ export default function Referrals() {
       </div>
 
       {/* Member Level & Metrics - 4 Card Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="card-hover cursor-pointer">
           <CardHeader>
             <CardTitle className="text-sm font-medium border-b pb-2">
@@ -1101,6 +1103,10 @@ export default function Referrals() {
                     cardDetails?.appointments?.platform == "calendly" &&
                     cardDetails?.appointments?.calendlyUrl && (
                       <button
+                        style={{
+                          backgroundColor: cardDetails?.brandColor,
+                          color: "#FFFFFF",
+                        }}
                         onClick={() => {
                           navigate(cardDetails?.appointments?.calendlyUrl);
                         }}
@@ -1114,6 +1120,10 @@ export default function Referrals() {
                     cardDetails?.appointments?.platform == "google" &&
                     cardDetails?.appointments?.googleUrl && (
                       <button
+                        style={{
+                          backgroundColor: cardDetails?.brandColor,
+                          color: "#FFFFFF",
+                        }}
                         onClick={() => {
                           navigate(cardDetails?.appointments?.googleUrl);
                         }}
@@ -1127,6 +1137,10 @@ export default function Referrals() {
                     "call-to-action" &&
                     cardDetails?.appointments?.ctaUrl && (
                       <button
+                        style={{
+                          backgroundColor: cardDetails?.brandColor,
+                          color: "#FFFFFF",
+                        }}
                         onClick={() => {
                           navigate(cardDetails?.appointments?.ctaUrl);
                         }}
@@ -1142,6 +1156,10 @@ export default function Referrals() {
                       "direct-ads" &&
                     cardDetails?.appointments?.directAds.type != "none" && (
                       <button
+                        style={{
+                          backgroundColor: cardDetails?.brandColor,
+                          color: "#FFFFFF",
+                        }}
                         onClick={() => {
                           cardDetails && setShowLightbox(true);
                         }}
@@ -1220,11 +1238,15 @@ export default function Referrals() {
                         >
                           <AvatarImage
                             src={
-                              referral?.profilePhoto ||
-                              "/lovable-uploads/logo_color_correct.png"
+                              referral?.isPublic
+                                ? "/lovable-uploads/private_card_logo.png"
+                                : referral?.profilePhoto
+                                ? referral.profilePhoto
+                                : "/lovable-uploads/logo_color_correct.png"
                             }
                             alt={referral?.name}
                           />
+
                           <AvatarFallback>
                             {referral?.name
                               ?.split(" ")

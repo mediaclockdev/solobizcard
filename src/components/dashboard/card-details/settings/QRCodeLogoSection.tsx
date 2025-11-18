@@ -71,9 +71,7 @@ export function QRCodeLogoSection({
         if(logoFile===null){
             const response = await fetch("/lovable-uploads/6e79eba6-9505-44d3-9af1-e8b13b7c46d0.png");
             const blob = await response.blob();
-              defaultLogo = new File([blob], "logo.png", { type: blob.type });
-              console.log("defailt==",defaultLogo);
-              
+              defaultLogo = new File([blob], "logo.png", { type: blob.type });    
         }
         const qrDataUrl = await generateQRCodeWithLogo(cardUrl, defaultLogo, {
           width: 200,
@@ -206,7 +204,7 @@ export function QRCodeLogoSection({
         unsubscribe = onSnapshot(ref, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data() as BusinessCard;
-            console.log("Data====>",data.qrCode);
+            //console.log("Data====>",data.qrCode);
             if (data.qrCode?.qrCodeUrl) {
               setSavedQRCodeUrl(data.qrCode.qrCodeUrl);
             }

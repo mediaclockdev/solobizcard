@@ -122,6 +122,12 @@ export function CardDisplayContainer() {
               ctaLabel: "Schedule Meeting",
               ctaUrl: "https://calendly.com/johnsmith",
             },
+            cardView: 0,
+            cardShare: 0,
+            leadsGenerated: 0,
+            linkClick: 0,
+            adsView: 0,
+            saveContact: 0,
             metadata: {
               id: "test-card",
               createdAt: new Date().toISOString(),

@@ -16,10 +16,15 @@ export function DeleteCardSection({
 }) {
   const handleDelete = async () => {
     try {
-      deleteBusinessCard(cardId);
-      await deleteDatabaseBusinessCard(cardId);
-      const cardRef = doc(db, "businessCards", cardId);
-      await deleteDoc(cardRef);
+      if (checkLocalCardExist(cardId)) {
+        console.log("cardId", cardId);
+        deleteBusinessCard(cardId);
+      } else {
+        console.log("else", cardId);
+        await deleteDatabaseBusinessCard(cardId);
+      }
+      // const cardRef = doc(db, "businessCards", cardId);
+      // await deleteDoc(cardRef);
       if (parentHandleDelete) parentHandleDelete();
       console.log("Card deleted successfully");
     } catch (error) {

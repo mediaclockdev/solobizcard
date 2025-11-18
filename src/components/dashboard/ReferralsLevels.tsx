@@ -200,7 +200,7 @@ export function ReferralsLevels() {
           nextLevelName = "Level-Up";
           remainingPoints = 0;
         } else if (childrenReachedLevel2 < MNR) {
-          console.log("childrenReachedLevel2=", childrenReachedLevel2);
+          //console.log("childrenReachedLevel2=", childrenReachedLevel2);
           userLevelStr = childrenReachedLevel2;
           memberLevel = "Level-Up";
           requiredChildrenToNext = childrenRemainingLevel2;

@@ -108,7 +108,7 @@ export default function Support() {
     setStatus("");
 
     try {
-      // ✅ Store issue in Firestore
+      // Store issue in Firestore
       await addDoc(collection(db, "support_data"), {
         userId: user?.uid || null,
         userName: formData.userName,
@@ -118,14 +118,14 @@ export default function Support() {
         createdAt: serverTimestamp(),
       });
 
-      // ✅ Send email (optional)
+      // Send email (optional)
       const res = await fetch("/api/send-support-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      // ✅ Update "public" count in the same collection
+      // Update "public" count in the same collection
       const docRef = doc(db, "support", "admin");
       await setDoc(docRef, { count: increment(1) }, { merge: true });
 

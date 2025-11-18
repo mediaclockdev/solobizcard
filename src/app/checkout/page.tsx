@@ -15,16 +15,19 @@ import { useToast } from "@/contexts/ToastContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { db, auth } from "@/services/firebase";
 import {
+  addDoc,
   arrayUnion,
   collection,
   doc,
   getDoc,
   getDocs,
   query,
+  serverTimestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { FaStripe, FaPaypal } from "react-icons/fa";
+import { Balance } from "@mui/icons-material";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
@@ -63,6 +66,35 @@ const CheckoutForm = ({ plan, price, billing, userId, setIsLoading }: any) => {
     setPaymentMethod(method);
   };
 
+  const savePurchaseHistory = async (paymentResult: any) => {
+    try {
+      await addDoc(collection(db, "purchases"), {
+        userId,
+        plan,
+        type: plan === "pro" ? "pro" : "addon",
+        price: parseFloat(price),
+        billing,
+        paymentMethod: "stripe",
+        paymentIntentId: paymentResult.paymentIntent.id,
+        status: "succeeded",
+        timestamp: serverTimestamp(),
+
+        // lineage data for easy fetch later
+        referredBy: user?.referredBy || null,
+        parentUid: user?.parentUid || null,
+        grandParentUid: user?.grandParentUid || null,
+
+        // for dashboard recent activity
+        userName: form.fullName,
+        userEmail: form.email,
+      });
+
+      console.log("Purchase history saved!");
+    } catch (err) {
+      console.error("Failed to save purchase history:", err);
+    }
+  };
+
   const handleReferralsEarning = async () => {
     const userRef = doc(db, "users", userId);
     const userSnap = await getDoc(userRef);
@@ -87,36 +119,60 @@ const CheckoutForm = ({ plan, price, billing, userId, setIsLoading }: any) => {
           let childEarnings = 0;
           let grandchildEarnings = 0;
           let operatingCostRate = 0;
-
+          let addonsPlans = {};
+          addonsPlans[plan] = Number(price);
           const settingsRef = doc(db, "users", parentUid);
 
           const pricingRequirement = doc(db, "settings", "PricingRequirement");
           const snapPricingRequirement = await getDoc(pricingRequirement);
           if (snapPricingRequirement.exists()) {
-            operatingCostRate = snapPricingRequirement.data().proUpgradePerYear;
+            operatingCostRate =
+              snapPricingRequirement.data().proUpgradeYearlyWithDiscount;
           }
 
           const snap1 = await getDoc(settingsRef);
+
           if (snap1.exists()) {
             childEarnings = snap1.data().userChildEarning;
             grandchildEarnings = snap1.data().userGrandChildEarning;
+            addonsPlans[plan] = Number(price);
           }
+
+          console.log("addonsPlans", addonsPlans);
           let childBalanceEarnings = parentRefData.childBalanceEarnings || {};
           let balanceEarnings = parentRefData.balanceEarnings || {};
           let earningsCost = parentRefData.earningsCost || {};
 
           const earningAmount =
-            (Number(operatingCostRate) * Number(childEarnings)) / 100;
+            (Number(addonsPlans[plan]) * Number(childEarnings)) / 100;
 
           // Create a clean object to avoid prototype pollution or undefined keys
+          // childBalanceEarnings = {
+          //   ...childBalanceEarnings,
+          //   [user.uid]: (childBalanceEarnings[user.uid] || 0) + earningAmount,
+          // };
           childBalanceEarnings = {
             ...childBalanceEarnings,
-            [user.uid]: (childBalanceEarnings[user.uid] || 0) + earningAmount,
+            [user.uid]: {
+              ...(childBalanceEarnings[user.uid] || {}),
+
+              [plan]:
+                (childBalanceEarnings[user.uid]?.[plan] || 0) + earningAmount,
+            },
           };
+
+          // balanceEarnings = {
+          //   ...balanceEarnings,
+          //   [user.uid]: (balanceEarnings[user.uid] || 0) + earningAmount,
+          // };
           balanceEarnings = {
             ...balanceEarnings,
-            [user.uid]: (balanceEarnings[user.uid] || 0) + earningAmount,
+            [user.uid]: {
+              ...(balanceEarnings[user.uid] || {}),
+              [plan]: (balanceEarnings[user.uid]?.[plan] || 0) + earningAmount,
+            },
           };
+
           earningsCost = {
             ...earningsCost,
             [user.uid]: childEarnings,
@@ -139,18 +195,40 @@ const CheckoutForm = ({ plan, price, billing, userId, setIsLoading }: any) => {
               let parentBalanceEarnings = gpData.parentBalanceEarnings || {};
 
               const earningAmount =
-                (Number(operatingCostRate) * Number(grandchildEarnings)) / 100;
+                (Number(addonsPlans[plan]) * Number(grandchildEarnings)) / 100;
 
               // Create a clean object to avoid prototype pollution or undefined keys
+              // parentBalanceEarnings = {
+              //   ...parentBalanceEarnings,
+              //   [user.uid]:
+              //     (childBalanceEarnings[user.uid] || 0) + earningAmount,
+              // };
+
               parentBalanceEarnings = {
                 ...parentBalanceEarnings,
-                [user.uid]:
-                  (childBalanceEarnings[user.uid] || 0) + earningAmount,
+                [user.uid]: {
+                  ...(childBalanceEarnings[user.uid] || {}),
+
+                  [plan]:
+                    (childBalanceEarnings[user.uid]?.[plan] || 0) +
+                    earningAmount,
+                },
               };
+
+              // balanceEarnings = {
+              //   ...balanceEarnings,
+              //   [user.uid]: (balanceEarnings[user.uid] || 0) + earningAmount,
+              // };
+
               balanceEarnings = {
                 ...balanceEarnings,
-                [user.uid]: (balanceEarnings[user.uid] || 0) + earningAmount,
+                [user.uid]: {
+                  ...(balanceEarnings[user.uid] || {}),
+                  [plan]:
+                    (balanceEarnings[user.uid]?.[plan] || 0) + earningAmount,
+                },
               };
+
               earningsCost = {
                 ...earningsCost,
                 [user.uid]: grandchildEarnings,
@@ -219,6 +297,7 @@ const CheckoutForm = ({ plan, price, billing, userId, setIsLoading }: any) => {
         }
 
         if (paymentResult.paymentIntent?.status === "succeeded") {
+          await savePurchaseHistory(paymentResult);
           handleReferralsEarning();
           setIsLoading(false);
           showToast("Subscription activated successfully!", "success");
@@ -430,18 +509,29 @@ const CheckoutPage = () => {
             {/* BRAND */}
             <div>
               <img
-                src="/lovable-uploads/6e79eba6-9505-44d3-9af1-e8b13b7c46d0.png"
+                src="/lovable-uploads/solo-logo-icon.png"
                 alt="SoloBizCards Logo"
-                className="h-14 mb-8"
+                className="mb-8 w-11 h-11 sm:w-14 sm:h-14 object-contain rounded-lg"
               />
               {/* <img src="/logo.png" alt="Brand Logo" className="h-14 mb-8" /> */}
 
               <h2 className="text-3xl font-extrabold mb-2">
                 Upgrade Your Plan
               </h2>
-              <p className="text-indigo-100 mb-10">
+              <p className="text-indigo-100 mb-3">
                 Unlock premium features & improve productivity.
               </p>
+              {/* Money-back guarantee + icon in one line */}
+              <div className="flex items-center gap-2 mb-10">
+                <p className="text-xl">
+                  30-day money back guarantee
+                </p>
+                <img
+                  src="/lovable-uploads/30-money back.png"
+                  alt="SoloBizCards Logo"
+                  className="h-14 w-14 object-contain"
+                />
+              </div>
 
               {/* Order Summary */}
               <div className="bg-indigo-500/40 backdrop-blur-sm p-6 rounded-xl space-y-4">

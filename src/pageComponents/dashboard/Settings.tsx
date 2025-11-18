@@ -471,7 +471,6 @@ export default function Settings() {
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
         const data = userSnap.data();
-        console.log("data", data);
         if (data.avatarUrl) {
           setAvatarUrl(data.avatarUrl);
         }

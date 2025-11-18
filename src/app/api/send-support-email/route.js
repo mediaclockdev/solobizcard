@@ -41,7 +41,7 @@ export async function POST(req) {
     // Email HTML template
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; color: #333;">
-        <h2 style="color:#2563eb;">Support Request</h2>
+        <h2 style="color:#2563eb;">Support Request From ${action} Page</h2>
         <p><strong>User Name:</strong> ${userName}</p>
         <p><strong>User Email:</strong> ${userEmail}</p>
         ${subject ? `<p><strong>Subject:</strong> ${subject}</p>` : ""}
@@ -57,7 +57,7 @@ export async function POST(req) {
 
     // Send the email
     await transporter.sendMail({
-      from: `"Support Form" <${process.env.SMTP_USER}>`,
+      from: `"Support Form support@solobizcards.com"`,
       to: process.env.ADMIN_EMAIL,
       subject: `New Support Issue from ${userName} - ${
         subject || "No Subject"

@@ -140,7 +140,9 @@ export function MemberStatus() {
           }))[0];
           // const userData = querySnapshot.docs[0].data() as any;
           setParentInfo(userData);
-          setDefaultCard("5615dfda-ce61-48cf-b8b5-02d98001125b?selectedTab=favorites&view=true");
+          setDefaultCard(
+            "5615dfda-ce61-48cf-b8b5-02d98001125b?selectedTab=favorites&view=true"
+          );
           // console.log("userData", userData);
           const q = query(
             collection(db, "cards"),
@@ -569,6 +571,10 @@ export function MemberStatus() {
               cardDetails?.appointments?.platform == "calendly" &&
               cardDetails?.appointments?.calendlyUrl && (
                 <button
+                  style={{
+                    backgroundColor: cardDetails?.brandColor,
+                    color: "#FFFFFF",
+                  }}
                   onClick={() => {
                     navigate(cardDetails?.appointments?.calendlyUrl);
                   }}
@@ -582,6 +588,10 @@ export function MemberStatus() {
               cardDetails?.appointments?.platform == "google" &&
               cardDetails?.appointments?.googleUrl && (
                 <button
+                  style={{
+                    backgroundColor: cardDetails?.brandColor,
+                    color: "#FFFFFF",
+                  }}
                   onClick={() => {
                     navigate(cardDetails?.appointments?.googleUrl);
                   }}
@@ -594,6 +604,10 @@ export function MemberStatus() {
             {cardDetails?.appointments?.appointmentType == "call-to-action" &&
               cardDetails?.appointments?.ctaUrl && (
                 <button
+                  style={{
+                    backgroundColor: cardDetails?.brandColor,
+                    color: "#FFFFFF",
+                  }}
                   onClick={() => {
                     navigate(cardDetails?.appointments?.ctaUrl);
                   }}
@@ -607,6 +621,10 @@ export function MemberStatus() {
               cardDetails?.appointments?.appointmentType == "direct-ads" &&
               cardDetails?.appointments?.directAds.type != "none" && (
                 <button
+                  style={{
+                    backgroundColor: cardDetails?.brandColor,
+                    color: "#FFFFFF",
+                  }}
                   onClick={() => {
                     cardDetails && setShowLightbox(true);
                   }}

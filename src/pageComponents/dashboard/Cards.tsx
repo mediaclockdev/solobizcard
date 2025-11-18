@@ -82,6 +82,7 @@ export default function Cards() {
   const selectedTab = searchParams.get("selectedTab") ?? activeTab;
 
   const getDataBaseCards = async () => {
+    if (!user?.uid) return;
     const directoryCount = await memberDirectoryPublicCards();
     setMemberDirectoryCount(directoryCount.length ?? 0);
     // setMyCards([]);
@@ -156,11 +157,6 @@ export default function Cards() {
       const loadedCards = loadBusinessCards();
       const userHasAccount = hasUserAccount();
 
-      console.log("Access control check:", {
-        cardsCount: loadedCards.length,
-        hasAccount: userHasAccount,
-      });
-
       // Scenario A: No business cards + No user data
       if (loadedCards.length === 0 && !userHasAccount) {
         setShowCreateCardModal(false);
@@ -202,6 +198,20 @@ export default function Cards() {
 
     setFilteredCards(filtered);
   }, [cards, myCards, activeTab]);
+
+  function getDaySuffix(day) {
+    if (day >= 11 && day <= 13) return `${day}th`;
+    switch (day % 10) {
+      case 1:
+        return `${day}st`;
+      case 2:
+        return `${day}nd`;
+      case 3:
+        return `${day}rd`;
+      default:
+        return `${day}th`;
+    }
+  }
 
   const generatePreviewQRCode = useCallback(async (card, action) => {
     try {
@@ -257,7 +267,8 @@ export default function Cards() {
             // setTimeout(() => {
             //   navigate(`/dashboard/cards/${card.metadata.id}?option=edit`);
             // }, 200);
-            if (action === "details") {
+            if (action === "details" || action === "view") {
+              console.log("csacsa");
               navigate(`/dashboard/cards/${card.metadata.id}?option=edit`);
             } else if (action === "preview") {
               navigate(`/card/${card.metadata.id}?selectedTab=${activeTab}`);
@@ -266,23 +277,9 @@ export default function Cards() {
             }
           }
         } else {
-          function getDaySuffix(day) {
-            if (day >= 11 && day <= 13) return `${day}th`;
-            switch (day % 10) {
-              case 1:
-                return `${day}st`;
-              case 2:
-                return `${day}nd`;
-              case 3:
-                return `${day}rd`;
-              default:
-                return `${day}th`;
-            }
-          }
-
           const now = new Date();
-          const year = now.getFullYear(); // 2025
-          const month = now.toLocaleString("en-US", { month: "long" }); // Nov
+          const year = now.getFullYear();
+          const month = now.toLocaleString("en-US", { month: "long" });
           const day = getDaySuffix(now.getDate());
 
           const storage = getStorage();
@@ -302,7 +299,6 @@ export default function Cards() {
               qrLogoUrl: logoPreviewUrl || "",
             },
           };
-          console.log("caar", updatedCard);
           const q = query(
             collection(db, "cards"),
             where("metadata.id", "==", card.metadata.id)
@@ -362,7 +358,7 @@ export default function Cards() {
           }
         } else {
           generatePreviewQRCode(card, action);
-          console.log("View");
+          console.log("View", action);
         }
         // Navigate to card details view
 

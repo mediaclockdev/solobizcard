@@ -23,9 +23,24 @@ import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/contexts/ToastContext";
 
 const Earnings = () => {
   const paymentSchedule = [
@@ -81,12 +96,31 @@ const Earnings = () => {
   const [level3FormattedDate, setLevel3FormattedDate] = useState("");
   const [currentLevel, setCurrentLevel] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const createdAt = user?.metadata?.creationTime ?? new Date();
   const [formattedHistory, setFormattedHistory] = useState([]);
   const [recentActivities, setRecentActivities] = useState([]);
   const lastFive = recentActivities.slice(0, 5);
 
+  const [monetizationStatus, setMonetizationStatus] = useState<
+    "not_monetized" | "eligible" | "active"
+  >();
+
+  const [hasPending, setHasPending] = useState(false);
+  const [eligibleSince, setEligibleSince] = useState<string>("");
+  const [showActivationDialog, setShowActivationDialog] = useState(false);
+  const [activeSince, setActiveSince] = useState<string>("");
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [paypalAccount, setPaypalAccount] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
+  const { showToast } = useToast();
   const [valueSet, resetValueSet] = useState(0);
+
+  const [grossAddonsChildEarning, setGrossAddonsChildEarning] = useState(0);
+  const [grossAddonsGrandChildEarning, setGrossAddonsGrandChildEarning] =
+    useState(0);
+
+  const [earningCheck, setEarningCheck] = useState<boolean>(false);
 
   const date = new Date(createdAt);
   const day = date.getDate();
@@ -150,32 +184,33 @@ const Earnings = () => {
       const reversedEntries = Object.entries(balanceEarnings).reverse();
       const reversedCostEntries = Object.entries(earningsCost).reverse();
       const result = [];
-      for (const [uid, amount] of reversedEntries) {
-        const userRef = doc(db, "users", uid);
-        const userSnap = await getDoc(userRef);
+      let totalAmount = 0;
+      for (const [uid, plans] of reversedEntries) {
+        // Fetch user profile
+        const profileRef = doc(db, "users", uid);
+        const profileSnap = await getDoc(profileRef);
 
-        if (userSnap.exists()) {
-          const earningsCost =
-            reversedCostEntries.find(([id, cost]) => id === uid)?.[1] ?? 0;
-          const userData = userSnap.data();
+        const profile = profileSnap.exists() ? profileSnap.data() : {};
+        const earningsCost =
+          reversedCostEntries.find(([id, cost]) => id === uid)?.[1] ?? 0;
+        // Get cost structure for this user
+        const costPlans = earningsCost[uid] || {};
+
+        // Loop through plan types (pro, addons, etc.)
+        for (const [planName, amount] of Object.entries(plans)) {
+          totalAmount += Number(amount);
           result.push({
             uid,
-            amount,
+            planName,
+            amount, // plan-wise earning
             earcningsCost: earningsCost,
-            name: userData.displayName || "Unknown",
-            email: userData.email || "No Email",
-          });
-        } else {
-          result.push({
-            uid,
-            amount,
-            earcningsCost: 0,
-            name: "Unknown",
-            email: "Not found",
+            name: profile.displayName || "Unknown",
+            email: profile.email || "No Email",
           });
         }
       }
       setRecentActivities(result);
+      // setTotalEarnings(totalAmount);
     }
 
     if (levelDateISO) {
@@ -212,9 +247,23 @@ const Earnings = () => {
       const month = monthNames[date.getMonth()];
       const year = date.getFullYear();
 
-      const level3FormattedDateNew = `${day}${daySuffix(day)} ${month} ${year}`;
+      const level3FormattedDateNew = ` ${month} ${day}${daySuffix(
+        day
+      )} ${year}`;
+
       setLevel3FormattedDate(level3FormattedDateNew);
       setCurrentLevel(currentLevel);
+
+      if (currentLevel >= 3) {
+        if (monetizationStatus != "active") {
+          const monetizationStatus = "eligible";
+          setMonetizationStatus(monetizationStatus);
+        }
+        setEligibleSince(levelDateISO || "");
+        setActiveSince(levelDateISO || "");
+      }
+
+      setLoading(false);
     }
 
     if (currentLevel >= 3) {
@@ -255,6 +304,8 @@ const Earnings = () => {
     let paidChild = 0;
     let firstPaidInitial = new Date();
     let paidGC = 0;
+    let addonsGrossGCChildEarning = 0;
+    let addonsGrossChildEarning = 0;
     // --- Check children ---
     for (const childId of children) {
       const childRef = doc(db, "referrals", childId);
@@ -272,6 +323,12 @@ const Earnings = () => {
           if (!firstPaidInitial || startDate < firstPaidInitial) {
             firstPaidInitial = startDate;
           }
+        }
+        if (userchildData.addons?.length > 0) {
+          userchildData.addons.map((addons) => {
+            addonsGrossChildEarning +=
+              Number(childEarnings * addons.price) / 100;
+          });
         }
       }
 
@@ -297,20 +354,33 @@ const Earnings = () => {
               firstPaidInitial = startDate;
             }
           }
+
+          if (userchildData.addons?.length > 0) {
+            userchildData.addons.map((addons) => {
+              addonsGrossGCChildEarning +=
+                Number(grandchildEarnings * addons.price) / 100;
+            });
+          }
         }
       }
     }
     setScheduleCurrentMonth(firstPaidInitial);
     setChilPaidReferals(paidChild > 0 ? (paidChild * 100) / noOfChild : 0);
     setGrandChilPaidReferals(paidGC > 0 ? (paidGC * 100) / noOfGC : 0);
-    setChilPaid(paidChild);
-    setGrandChilPaid(paidGC);
-    const grossChildEarning = Number(
-      (childPaid * childEarnings * pricing) / 100
-    );
-    const grossGChildEarning = Number(
-      (grandChildPaid * grandchildEarnings * pricing) / 100
-    );
+
+    setGrossAddonsChildEarning(Number(addonsGrossChildEarning));
+    setGrossAddonsGrandChildEarning(Number(addonsGrossGCChildEarning));
+
+    setChilPaid(Number(paidChild));
+    setGrandChilPaid(Number(paidGC));
+
+    const grossChildEarning =
+      addonsGrossChildEarning +
+      Number((childPaid * childEarnings * pricing) / 100);
+
+    const grossGChildEarning =
+      addonsGrossGCChildEarning +
+      Number((grandChildPaid * grandchildEarnings * pricing) / 100);
 
     const netChildEarning =
       grossChildEarning - (grossChildEarning * operatingCostRate) / 100;
@@ -321,7 +391,7 @@ const Earnings = () => {
     const schedule = await generateSchedule(
       scheduleCurrentMonth.getMonth(),
       scheduleCurrentMonth.getFullYear(),
-      12,
+      16,
       4,
       Number(sechduleAmount / 12),
       scheduleAmount
@@ -396,79 +466,103 @@ const Earnings = () => {
       setCounts(res);
     };
 
+    const fetchMonetizedData = async () => {
+      const monetizedRef = doc(db, "monetized", user?.uid);
+      const monetizedSnap = await getDoc(monetizedRef);
+
+      if (monetizedSnap.exists()) {
+        const existingData = monetizedSnap.data();
+        if (existingData.status === "pending") {
+          setHasPending(true);
+          return;
+        }
+        if (existingData.status === "active") {
+          setHasPending(false);
+          setLoading(true);
+          setMonetizationStatus("active");
+          setLoading(false);
+          return;
+        }
+      }
+    };
+
     if (user) {
       setIsLoading(true);
       fetchSettings();
       fetchCounts();
       fetchPaidCounts();
       setIsLoading(false);
+      fetchMonetizedData();
     }
   }, [isLoading, user]);
 
-  useEffect(() => {
-    if (!user?.subscriptionHistory || user.subscriptionHistory.length === 0)
-      return;
+  // useEffect(() => {
+  //   if (!user?.subscriptionHistory || user.subscriptionHistory.length === 0)
+  //     return;
 
-    // Sort by startDate descending
-    const sortedHistory = [...user.subscriptionHistory].sort((a, b) => {
-      const getTime = (date: any) => {
-        if (!date) return 0;
-        // Firestore Timestamp
-        if (date.toDate) return date.toDate().getTime();
-        // Number
-        if (typeof date === "number") return date;
-        // String
-        const parsed = new Date(date).getTime();
-        return isNaN(parsed) ? 0 : parsed;
-      };
-      return getTime(b.startDate) - getTime(a.startDate);
-    });
+  //   // Sort by startDate descending
+  //   const sortedHistory = [...user.subscriptionHistory].sort((a, b) => {
+  //     const getTime = (date: any) => {
+  //       if (!date) return 0;
+  //       // Firestore Timestamp
+  //       if (date.toDate) return date.toDate().getTime();
+  //       // Number
+  //       if (typeof date === "number") return date;
+  //       // String
+  //       const parsed = new Date(date).getTime();
+  //       return isNaN(parsed) ? 0 : parsed;
+  //     };
+  //     return getTime(b.startDate) - getTime(a.startDate);
+  //   });
 
-    // Map into desired format
-    const formatted = sortedHistory
-      .map((sub) => {
-        let dateObj: Date | null = null;
+  //   // Map into desired format
+  //   const formatted = sortedHistory
+  //     .map((sub) => {
+  //       let dateObj: Date | null = null;
 
-        if (!sub.startDate) return null;
+  //       if (!sub.startDate) return null;
 
-        // Firestore Timestamp
-        if (sub.startDate.toDate) dateObj = sub.startDate.toDate();
-        // Number
-        else if (typeof sub.startDate === "number")
-          dateObj = new Date(sub.startDate);
-        // String
-        else if (typeof sub.startDate === "string") {
-          const parsed = new Date(sub.startDate);
-          if (!isNaN(parsed.getTime())) dateObj = parsed;
-        }
+  //       // Firestore Timestamp
+  //       if (sub.startDate.toDate) dateObj = sub.startDate.toDate();
+  //       // Number
+  //       else if (typeof sub.startDate === "number")
+  //         dateObj = new Date(sub.startDate);
+  //       // String
+  //       else if (typeof sub.startDate === "string") {
+  //         const parsed = new Date(sub.startDate);
+  //         if (!isNaN(parsed.getTime())) dateObj = parsed;
+  //       }
 
-        if (!dateObj) return null;
+  //       if (!dateObj) return null;
 
-        const month = dateObj.toLocaleString("default", { month: "short" });
-        const year = dateObj.getFullYear();
+  //       const month = dateObj.toLocaleString("default", { month: "short" });
+  //       const year = dateObj.getFullYear();
 
-        const amount = `$${Number(sub.price).toLocaleString(undefined, {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })}`;
+  //       const amount = `$${Number(sub.price).toLocaleString(undefined, {
+  //         minimumFractionDigits: 2,
+  //         maximumFractionDigits: 2,
+  //       })}`;
 
-        return {
-          amount,
-          date: `${month}. ${year}`,
-        };
-      })
-      .filter(Boolean); // remove nulls
+  //       return {
+  //         amount,
+  //         date: `${month}. ${year}`,
+  //       };
+  //     })
+  //     .filter(Boolean); // remove nulls
 
-    setFormattedHistory(formatted);
-  }, [user?.subscriptionHistory]);
+  //   setFormattedHistory(formatted);
+  // }, [user?.subscriptionHistory]);
 
-  // function generateSchedule(
+  // async function generateSchedule(
   //   scheduleStartMonth,
   //   currentYear,
   //   totalMonths = 12,
   //   zeroMonths = 4,
-  //   finalAmount = 10
+  //   finalAmount = 10,
+  //   totalEarningAmount
   // ) {
+  //   if (!user?.uid) return [];
+
   //   const schedule = [];
   //   const today = new Date();
   //   const currentMonthIndex = today.getMonth(); // 0-based (0 = Jan)
@@ -476,9 +570,15 @@ const Earnings = () => {
   //   // Precompute zero-value months
   //   const zeroMonthIndices = [];
   //   for (let i = 0; i < zeroMonths; i++) {
-  //     zeroMonthIndices.push((scheduleStartMonth + i) % 12);
+  //     const date = new Date(currentYear, currentMonthIndex + i, 1);
+  //     const monthIndex = date.getMonth();
+  //     const monthName = date.toLocaleString("default", { month: "short" });
+  //     const year = date.getFullYear();
+  //     // zeroMonthIndices.push((scheduleStartMonth + i) % 12);
+  //     zeroMonthIndices.push(`${monthIndex}-${year}`);
   //   }
 
+  //   // --- Build Schedule ---
   //   for (let i = 0; i < totalMonths; i++) {
   //     const date = new Date(currentYear, currentMonthIndex + i, 1);
   //     const monthIndex = date.getMonth();
@@ -486,20 +586,87 @@ const Earnings = () => {
   //     const year = date.getFullYear();
 
   //     // Determine amount
-  //     // If monthIndex is in zeroMonthIndices → 0, else finalAmount
-  //     const amount = zeroMonthIndices.includes(monthIndex) ? 0 : finalAmount;
-
+  //     const amount = zeroMonthIndices.includes(`${monthIndex}-${year}`)
+  //       ? 0
+  //       : finalAmount;
+  //     //  const amount = i < zeroMonths ? 0 : finalAmount
   //     // Determine last day of month
   //     const lastDay = new Date(year, monthIndex + 1, 0).getDate();
-  //     const dueDate = `${lastDay}th`; // simple th suffix
+  //     const dueDate = `${lastDay}th`;
 
   //     schedule.push({
   //       month: `${monthName} ${year}`,
-  //       amount: `$${amount.toFixed(2)}`,
+  //       year,
+  //       monthName,
+  //       amount: Number(amount.toFixed(2)),
   //       label: i === 0 ? "[current]" : "",
   //       status: i === 0 ? "current" : "",
-  //       dueDate: dueDate,
+  //       dueDate,
   //     });
+  //   }
+
+  //   // --- Compute totals ---
+  //   const totalEarningBalance = schedule.reduce((sum, s) => sum + s.amount, 0);
+
+  //   // --- Convert to year-wise object ---
+  //   const yearWiseEarnings = {};
+
+  //   schedule.forEach((item) => {
+  //     if (!yearWiseEarnings[item.year]) {
+  //       yearWiseEarnings[item.year] = {};
+  //     }
+  //     // Store both amount and status under month
+  //     yearWiseEarnings[item.year][item.monthName] = {
+  //       amount: item.amount,
+  //       status: "unpaid", // default status
+  //     };
+  //   });
+
+  //   // --- Save to Firestore ---
+  //   try {
+  //     const earningRef = doc(db, "earnings", user?.uid);
+  //     const earningSnap = await getDoc(earningRef);
+
+  //     if (earningSnap.exists()) {
+  //       const existingData = earningSnap.data();
+  //       const existingEarnings = existingData.yearWiseEarnings || {};
+
+  //       // Merge logic: keep existing data if month is already paid
+  //       const mergedEarnings = { ...existingEarnings };
+
+  //       for (const [year, months] of Object.entries(yearWiseEarnings)) {
+  //         if (!mergedEarnings[year]) mergedEarnings[year] = {};
+
+  //         for (const [monthName, value] of Object.entries(months)) {
+  //           const existingMonth = mergedEarnings[year][monthName] || {
+  //             amount: 0,
+  //             status: "unpaid",
+  //           };
+
+  //           // Only update if the month is not already paid
+  //           if (existingMonth.status !== "paid") {
+  //             mergedEarnings[year][monthName] = value;
+  //           }
+  //         }
+  //       }
+
+  //       await updateDoc(earningRef, {
+  //         totalEarningBalance: Number(totalEarningBalance.toFixed(2)),
+  //         yearWiseEarnings: mergedEarnings,
+  //         updatedAt: serverTimestamp(),
+  //       });
+  //     } else {
+  //       // Create new document if it doesn't exist
+  //       await setDoc(earningRef, {
+  //         userId: user.uid,
+  //         totalEarningBalance: Number(totalEarningBalance.toFixed(2)),
+  //         yearWiseEarnings,
+  //         createdAt: serverTimestamp(),
+  //         updatedAt: serverTimestamp(),
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saving earnings:", error);
   //   }
 
   //   return schedule;
@@ -519,21 +686,46 @@ const Earnings = () => {
     const today = new Date();
     const currentMonthIndex = today.getMonth(); // 0-based (0 = Jan)
 
-    // Precompute zero-value months
+    // --- Fetch existing Firestore data once ---
+    const earningRef = doc(db, "earnings", user.uid);
+    const earningSnap = await getDoc(earningRef);
+    const existingEarnings = earningSnap.exists()
+      ? earningSnap.data()?.yearWiseEarnings || {}
+      : {};
+
+    // --- Precompute zero-value months ---
     const zeroMonthIndices = [];
     for (let i = 0; i < zeroMonths; i++) {
-      zeroMonthIndices.push((scheduleStartMonth + i) % 12);
+      const date = new Date(currentYear, currentMonthIndex + i, 1);
+      const monthIndex = date.getMonth();
+      const monthName = date.toLocaleString("default", { month: "short" });
+      const year = date.getFullYear();
+      zeroMonthIndices.push(`${monthIndex}-${year}`);
     }
 
-    // --- 🗓️ Build Schedule ---
+    // --- Build Schedule ---
     for (let i = 0; i < totalMonths; i++) {
       const date = new Date(currentYear, currentMonthIndex + i, 1);
       const monthIndex = date.getMonth();
       const monthName = date.toLocaleString("default", { month: "short" });
       const year = date.getFullYear();
 
-      // Determine amount
-      const amount = zeroMonthIndices.includes(monthIndex) ? 0 : finalAmount;
+      // 🔍 Check existing Firestore data for this month
+      const existingMonthData = existingEarnings?.[year]?.[monthName] || null;
+
+      let amount;
+      let status = "unpaid";
+
+      if (existingMonthData && existingMonthData.status === "paid") {
+        // If paid, keep old amount and status
+        amount = existingMonthData.amount;
+        status = "paid";
+      } else {
+        // Otherwise, follow normal logic
+        amount = zeroMonthIndices.includes(`${monthIndex}-${year}`)
+          ? 0
+          : finalAmount;
+      }
 
       // Determine last day of month
       const lastDay = new Date(year, monthIndex + 1, 0).getDate();
@@ -545,57 +737,203 @@ const Earnings = () => {
         monthName,
         amount: Number(amount.toFixed(2)),
         label: i === 0 ? "[current]" : "",
-        status: i === 0 ? "current" : "",
+        status,
         dueDate,
       });
     }
 
-    // --- 💰 Compute totals ---
+    // --- Compute totals ---
     const totalEarningBalance = schedule.reduce((sum, s) => sum + s.amount, 0);
 
-    // --- 🗂️ Convert to year-wise object ---
+    // --- Convert to year-wise object ---
     const yearWiseEarnings = {};
     schedule.forEach((item) => {
       if (!yearWiseEarnings[item.year]) {
         yearWiseEarnings[item.year] = {};
       }
-      yearWiseEarnings[item.year][item.monthName] = item.amount;
+      yearWiseEarnings[item.year][item.monthName] = {
+        amount: item.amount,
+        status: item.status,
+      };
     });
 
-    // --- 💾 Save to Firestore ---
+    // --- Save to Firestore ---
     try {
-      const earningRef = doc(db, "earnings", user.uid);
-      const earningSnap = await getDoc(earningRef);
-
       if (earningSnap.exists()) {
-        await updateDoc(earningRef, {
-          totalEarningBalance: Number(totalEarningAmount.toFixed(2)),
-          yearWiseEarnings,
-          updatedAt: serverTimestamp(),
-        });
+        // Merge existing and new earnings
+        //  const mergedEarnings = { ...existingEarnings };
+        const mergedEarnings = JSON.parse(JSON.stringify(existingEarnings));
+
+        for (const [year, months] of Object.entries(yearWiseEarnings)) {
+          if (!mergedEarnings[year]) mergedEarnings[year] = {};
+
+          for (const [monthName, value] of Object.entries(months)) {
+            const existingMonth = mergedEarnings[year][monthName] || {
+              amount: 0,
+              status: "unpaid",
+            };
+
+            // Only overwrite if not already paid
+            if (existingMonth.status !== "paid") {
+              mergedEarnings[year][monthName] = value;
+            }
+          }
+        }
+
+        if (!earningCheck) {
+          const isEqual =
+            JSON.stringify(mergedEarnings) === JSON.stringify(existingEarnings);
+
+          if (!isEqual) {
+            setEarningCheck(true);
+            await updateDoc(earningRef, {
+              totalEarningBalance: Number(totalEarningBalance.toFixed(2)),
+              yearWiseEarnings: mergedEarnings,
+              updatedAt: serverTimestamp(),
+            });
+          } else {
+            setEarningCheck(false);
+          }
+        }
       } else {
         await setDoc(earningRef, {
           userId: user.uid,
-          totalEarningBalance: Number(totalEarningAmount.toFixed(2)),
+          totalEarningBalance: Number(totalEarningBalance.toFixed(2)),
           yearWiseEarnings,
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
         });
       }
     } catch (error) {
-      console.error("❌ Error saving earnings:", error);
+      console.error("Error saving earnings:", error);
     }
 
     return schedule;
   }
 
-  // Example usage
-  // scheduleStartMonth = October (9), current month = Nov 2025
+  const fetchPaidEarnings = async (userId: string) => {
+    const ref = doc(db, "earnings", userId);
+    const snap = await getDoc(ref);
 
-  // Example usage:
-  // scheduleCurrentMonth = September (8, 0-indexed), current month = October (9)
-  // const schedule = generateDynamicPaymentSchedule(scheduleCurrentMonth.getMonth(), scheduleCurrentMonth.getFullYear(), Number(sechduleAmount/12));
-  // console.log("schedule",schedule);
+    if (!snap.exists()) return [];
+
+    const data = snap.data();
+    const yearWise = data.yearWiseEarnings || {};
+
+    const results: { month: string; year: string; amount: number }[] = [];
+
+    // Loop through each year
+    Object.keys(yearWise).forEach((year) => {
+      const months = yearWise[year];
+
+      // Loop through each month
+      Object.keys(months).forEach((month) => {
+        const record = months[month];
+
+        if (record.status === "paid") {
+          results.push({
+            month,
+            year,
+            amount: record.amount,
+          });
+        }
+      });
+    });
+
+    return results;
+  };
+
+  useEffect(() => {
+    if (!user?.uid) return;
+
+    const load = async () => {
+      const paid = await fetchPaidEarnings(user.uid);
+
+      const formatted = paid.map((item) => {
+        const formattedAmount = `$${Number(item.amount).toLocaleString(
+          undefined,
+          {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }
+        )}`;
+
+        return {
+          amount: formattedAmount,
+          date: `${item.month} - ${item.year}`,
+        };
+      });
+
+      setFormattedHistory(formatted);
+    };
+
+    load();
+  }, [user?.uid]);
+
+  const refreshStatus = () => {
+    // const userData = loadUserData();
+    // if (userData) {
+    //   setMonetizationStatus(userData.monetizationStatus || "not_monetized");
+    //   setActiveSince(userData.monetizationActiveSince || "");
+    //   if (userData.userId) {
+    //     setHasPending(hasPendingRequest(userData.userId));
+    //   }
+    // }
+  };
+
+  const handleActivation = async () => {
+    if (!paypalAccount.trim()) {
+      showToast("Please provide your PayPal account email or phone", "error");
+      return;
+    }
+
+    if (!termsAccepted) {
+      showToast("Please accept the payment terms and conditions", "error");
+      return;
+    }
+
+    try {
+      const userId = user?.uid;
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+
+      // if (!userSnap.exists()) {
+      //   showToast("User record not found in database.", "error");
+      //   return;
+      // }
+
+      const userData = userSnap.data();
+
+      const monetizationData = {
+        userId: userId,
+        userName: userData.displayName || "Unknown User",
+        email: userData.email || "",
+        referralNumber: userData.referralCode || "N/A",
+        paypalAccount: paypalAccount.trim(),
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      const monetizedRef = doc(db, "monetized", userId);
+      await setDoc(monetizedRef, monetizationData, { merge: true });
+
+      showToast("Activation Request Submitted", "success");
+
+      setShowActivationDialog(false);
+      setPaypalAccount("");
+      setTermsAccepted(false);
+
+      refreshStatus();
+    } catch (error) {
+      console.error("Error submitting activation request:", error);
+      showToast("Failed to submit request", "error");
+    }
+  };
+
+  const [openModal, setOpenModal] = useState(false);
+
+  const lastFivePaymet = formattedHistory?.slice(0, 5) || [];
+  const remaining = formattedHistory?.slice(5) || [];
 
   if (isLoading) {
     return (
@@ -609,7 +947,7 @@ const Earnings = () => {
     <TooltipProvider>
       <div className="space-y-4">
         {/* Monetization Status */}
-        <Alert className="border-green-200 bg-green-50">
+        {/* <Alert className="border-green-200 bg-green-50">
           <AlertTitle className="text-base font-semibold">
             Monetization Status
           </AlertTitle>
@@ -627,7 +965,140 @@ const Earnings = () => {
               </span>
             )}
           </AlertDescription>
-        </Alert>
+        </Alert> */}
+
+        {loading || monetizationStatus == null ? (
+          <div className="flex justify-center items-center py-6">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            {monetizationStatus === "not_monetized" && (
+              <Alert className="border-red-200 bg-red-50">
+                <AlertTitle className="text-base font-semibold">
+                  Monetization Status
+                </AlertTitle>
+                <AlertDescription className="text-base mt-2">
+                  <span className="font-medium text-red-600">
+                    Not Monetized - Inactive
+                  </span>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    You need to meet the requirements to become eligible for
+                    monetization.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+          </>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-6">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            {monetizationStatus === "eligible" && !hasPending && (
+              <Alert className="border-orange-200 bg-orange-50">
+                <AlertTitle className="text-base font-semibold">
+                  Monetization Status
+                </AlertTitle>
+                <AlertDescription className="text-base mt-2">
+                  <span className="font-medium text-orange-600">
+                    Monetized - Eligible:
+                  </span>{" "}
+                  since{" "}
+                  {eligibleSince
+                    ? new Date(eligibleSince).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "N/A"}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 w-full border-orange-300 text-orange-700 hover:bg-orange-100 hover:text-orange-800"
+                    onClick={() => setShowActivationDialog(true)}
+                  >
+                    Request Activation
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+          </>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-6">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            {monetizationStatus === "eligible" && hasPending && (
+              <Alert className="border-orange-200 bg-orange-50">
+                <AlertTitle className="text-base font-semibold">
+                  Monetization Status
+                </AlertTitle>
+                <AlertDescription className="text-base mt-2">
+                  <span className="font-medium text-orange-600">
+                    Monetized - Eligible:
+                  </span>{" "}
+                  since{" "}
+                  {eligibleSince
+                    ? new Date(eligibleSince).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "N/A"}
+                  <div className="mt-3 p-3 bg-white rounded-md border border-orange-300">
+                    <p className="text-sm font-medium text-orange-700">
+                      ⏳ Activation Request Pending
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Your request is under review. You'll receive an email
+                      notification once approved.
+                    </p>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+          </>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-6">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <>
+            {monetizationStatus === "active" && activeSince && (
+              <Alert className="border-green-200 bg-green-50">
+                <AlertTitle className="text-base font-semibold">
+                  Monetization Status
+                </AlertTitle>
+                <AlertDescription className="text-base mt-2">
+                  <span className="font-medium text-green-600">
+                    Monetized - Active:
+                  </span>{" "}
+                  since{" "}
+                  {activeSince
+                    ? new Date(activeSince).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "N/A"}
+                  <p className="text-sm text-muted-foreground mt-2">
+                    🎉 You're now earning from referrals! Payments are processed
+                    monthly.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+          </>
+        )}
 
         {/* Income From Referrals */}
         <IncomeFromReferrals
@@ -638,6 +1109,8 @@ const Earnings = () => {
           grandChildPaidReferals={grandChildPaidReferals}
           paidChild={childPaid}
           grandChildPaid={grandChildPaid}
+          grossAddonsChildEarning={grossAddonsChildEarning}
+          grossAddonsGrandChildEarning={grossAddonsGrandChildEarning}
         />
 
         {/* Earnings Summary */}
@@ -661,6 +1134,9 @@ const Earnings = () => {
         {/* Payment Schedule */}
         <div>
           <h2 className="text-base font-semibold mb-4">Payment Schedule</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Total payments are due by the 28th of each month.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             {paymentScheduled.map((payment, index) => (
               <Card
@@ -682,20 +1158,20 @@ const Earnings = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-1 py-3">
-                  <div className="text-xs text-muted-foreground">
+                  {/* <div className="text-xs text-muted-foreground">
                     {payment.amount === "$0.00"
                       ? "Total Amount Due"
                       : "Total Due"}
-                  </div>
+                  </div> */}
                   <div className="text-lg font-bold">
                     $
                     {Number(payment.amount) == 0
                       ? 0.0
                       : Number(payment.amount.toFixed(2))}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  {/* <div className="text-xs text-muted-foreground">
                     Due Date: {payment.dueDate}.
-                  </div>
+                  </div> */}
                   <button className="text-xs text-blue-600 hover:underline pt-1">
                     Details here &gt;
                   </button>
@@ -733,7 +1209,7 @@ const Earnings = () => {
                 className="text-sm text-blue-600 hover:underline cursor-pointer mb-4"
                 onClick={() => setOpen(true)}
               >
-                Last 30 days payments &gt;
+                Last 30 recent activities &gt;
               </div>
 
               {/* Display last 5 payments */}
@@ -776,6 +1252,7 @@ const Earnings = () => {
           </Card>
 
           {/* Payout History */}
+          {/* CARD */}
           <Card className="lg:col-span-2 hover:border-gray-400 card-hover cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
@@ -785,13 +1262,17 @@ const Earnings = () => {
             </CardHeader>
 
             <CardContent className="space-y-3">
-              <div className="text-sm text-blue-600 hover:underline cursor-pointer mb-4">
-                {/* Last 30 days payments &gt; */}
-                No data found
+              {/* TRIGGER MODAL */}
+              <div
+                onClick={() => setOpenModal(true)}
+                className="text-sm text-blue-600 hover:underline cursor-pointer mb-4"
+              >
+                Last 30 days payments &gt;
               </div>
 
-              {/* {formattedHistory && formattedHistory.length > 0 ? (
-                formattedHistory.map((payout, index) => (
+              {/* SHOW LAST 5 RECORDS */}
+              {lastFivePaymet.length > 0 ? (
+                lastFivePaymet.map((payout, index) => (
                   <div
                     key={index}
                     className="flex justify-between items-center"
@@ -808,10 +1289,163 @@ const Earnings = () => {
                 <div className="text-center text-sm text-muted-foreground py-4">
                   No data found
                 </div>
-              )} */}
+              )}
             </CardContent>
           </Card>
+
+          {/* MODAL FOR ALL RECORDS */}
+          <Dialog open={openModal} onOpenChange={setOpenModal}>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Payout History</DialogTitle>
+              </DialogHeader>
+
+              {formattedHistory && formattedHistory.length > 0 ? (
+                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+                  {formattedHistory.map((payout, i) => (
+                    <div key={i} className="flex justify-between border-b py-2">
+                      <span className="font-medium text-blue-600">
+                        {payout.amount}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {payout.date}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No data found
+                </p>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
+
+        {/* Activation Dialog */}
+        <AlertDialog
+          open={showActivationDialog}
+          onOpenChange={setShowActivationDialog}
+        >
+          <AlertDialogContent className="sm:max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-lg font-bold">
+                PAYMENT ACCOUNT REQUIREMENT
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3 pt-4">
+                <div className="space-y-2 text-sm text-foreground">
+                  <p>
+                    <strong>1.</strong> To receive payment, you need a valid
+                    PayPal Account where your payouts will be sent.
+                  </p>
+                  <p>
+                    <strong>2.</strong> Provide your PayPal Account Name in the
+                    input field below
+                  </p>
+                </div>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="paypal-account">
+                  Email or Phone <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="paypal-account"
+                  type="text"
+                  placeholder="Enter your PayPal email or phone"
+                  value={paypalAccount}
+                  onChange={(e) => setPaypalAccount(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-start space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={termsAccepted}
+                  onCheckedChange={(checked) =>
+                    setTermsAccepted(checked as boolean)
+                  }
+                />
+                <div className="grid gap-1.5 leading-none">
+                  <label
+                    htmlFor="terms"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    I accept the{" "}
+                    <button
+                      type="button"
+                      className="text-primary underline hover:text-primary/80"
+                      onClick={() => setShowTermsDialog(true)}
+                    >
+                      payment terms and conditions
+                    </button>
+                    <span className="text-destructive"> *</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button onClick={handleActivation}>Activate</Button>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Terms and Conditions Dialog */}
+        <AlertDialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Payment Terms and Conditions</AlertDialogTitle>
+              <AlertDialogDescription className="space-y-3 text-foreground max-h-[400px] overflow-y-auto">
+                <p className="font-semibold">Payment Processing</p>
+                <p>
+                  All payments will be processed through PayPal. You must have a
+                  valid PayPal account to receive payments.
+                </p>
+
+                <p className="font-semibold">Payment Schedule</p>
+                <p>
+                  Payments are processed monthly, with a 90-day holding period.
+                  Earnings from any given month will be paid at the end of the
+                  4th month.
+                </p>
+
+                <p className="font-semibold">Minimum Payout Threshold</p>
+                <p>
+                  A minimum balance of $50 is required for payout processing.
+                  Amounts below this threshold will roll over to the next
+                  payment period.
+                </p>
+
+                <p className="font-semibold">Account Verification</p>
+                <p>
+                  Your PayPal account must be verified and in good standing to
+                  receive payments. Invalid or suspended accounts may result in
+                  payment delays or forfeiture.
+                </p>
+
+                <p className="font-semibold">Tax Compliance</p>
+                <p>
+                  You are responsible for reporting all earnings to relevant tax
+                  authorities. We will provide necessary documentation for tax
+                  purposes.
+                </p>
+
+                <p className="font-semibold">Payment Disputes</p>
+                <p>
+                  Any payment disputes must be reported within 30 days of the
+                  payment date. All disputes will be reviewed on a case-by-case
+                  basis.
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogAction>I Understand</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   );

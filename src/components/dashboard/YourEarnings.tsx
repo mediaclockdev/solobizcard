@@ -20,6 +20,55 @@ export function YourEarnings() {
   const [paymentScheduled, setPaymentScheduled] = useState([]);
   const [level3FormattedDate, setLevel3FormattedDate] = useState("");
   const [currentLevel, setCurrentLevel] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalEarnings, setTotalEarnings] = useState(0);
+
+  const totalEarning = async () => {
+    setIsLoading(true);
+    const userRef = doc(db, "referrals", user.uid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) return;
+    const userData = userSnap.data();
+
+    const currentLevel = userData.Level;
+    const levelDateISO = userData.LevelsUpdate[currentLevel];
+    const balanceEarnings = userData.balanceEarnings || {};
+    const earningsCost = userData.earningsCost || {};
+    // Convert to array of [uid, amount]
+    if (balanceEarnings) {
+      const reversedEntries = Object.entries(balanceEarnings).reverse();
+      const reversedCostEntries = Object.entries(earningsCost).reverse();
+      const result = [];
+      let totalAmount = 0;
+      for (const [uid, plans] of reversedEntries) {
+        // Fetch user profile
+        const profileRef = doc(db, "users", uid);
+        const profileSnap = await getDoc(profileRef);
+
+        const profile = profileSnap.exists() ? profileSnap.data() : {};
+        const earningsCost =
+          reversedCostEntries.find(([id, cost]) => id === uid)?.[1] ?? 0;
+        // Get cost structure for this user
+        const costPlans = earningsCost[uid] || {};
+
+        // Loop through plan types (pro, addons, etc.)
+        for (const [planName, amount] of Object.entries(plans)) {
+          totalAmount += Number(amount);
+          result.push({
+            uid,
+            planName,
+            amount, // plan-wise earning
+            earcningsCost: earningsCost,
+            name: profile.displayName || "Unknown",
+            email: profile.email || "No Email",
+          });
+        }
+      }
+      setTotalEarnings(totalAmount);
+      // setTotalEarnings(totalAmount);
+      console.log("totalAmount", totalAmount);
+    }
+  };
 
   const fetchPaidCounts = async () => {
     //console.log("User", user.uid);
@@ -81,6 +130,7 @@ export function YourEarnings() {
         }
       }
     }
+
     setScheduleCurrentMonth(firstPaidInitial);
     setChilPaidReferals(paidChild > 0 ? (paidChild * 100) / noOfChild : 0);
     setGrandChilPaidReferals(paidGC > 0 ? (paidGC * 100) / noOfGC : 0);
@@ -98,9 +148,10 @@ export function YourEarnings() {
     const netGChildEarning =
       grossGChildEarning - (grossGChildEarning * operatingCostRate) / 100;
     const sechduleAmount = Number(netChildEarning + netGChildEarning);
-   // console.log("sechduleAmount", sechduleAmount);
+    // console.log("sechduleAmount", sechduleAmount);
     setScheduleAmount(sechduleAmount);
   };
+
   const fetchSettings = async () => {
     try {
       const settingsRef = doc(db, "users", user.uid);
@@ -127,6 +178,7 @@ export function YourEarnings() {
 
   useEffect(() => {
     if (user) {
+      totalEarning();
       fetchSettings();
       fetchPaidCounts();
     }
@@ -142,7 +194,7 @@ export function YourEarnings() {
       <CardContent>
         <div className="text-2xl font-bold">
           {" "}
-          ${Number(scheduleAmount).toFixed(2)}
+          ${Number(totalEarnings).toFixed(2)}
         </div>
         <p className="text-xs text-muted-foreground mt-1">total earnings</p>
       </CardContent>

@@ -49,7 +49,7 @@ export default function ContactUs() {
         }),
       });
 
-      // ✅ Update "public" count in the same collection
+      // Update "public" count in the same collection
       const docRef = doc(db, "support", "public");
       await setDoc(docRef, { count: increment(1) }, { merge: true });
 

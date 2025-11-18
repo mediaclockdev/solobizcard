@@ -291,12 +291,18 @@ export function BusinessCardForm({
               image: card?.appointments?.directAds?.image || "",
             },
           },
-          cardView: 0,
-          cardShare: 0,
-          leadsGenerated: 0,
-          linkClick: 0,
-          adsView: 0,
-          saveContact: 0,
+          // cardView: 0,
+          // cardShare: 0,
+          // leadsGenerated: 0,
+          // linkClick: 0,
+          // adsView: 0,
+          // saveContact: 0,
+          cardView: card?.cardView || 0,
+          cardShare: card?.cardShare || 0,
+          leadsGenerated: card?.leadsGenerated || 0,
+          linkClick: card?.linkClick || 0,
+          adsView: card?.adsView || 0,
+          saveContact: card?.saveContact || 0,
           metadata: {
             id: card.metadata.id || "",
             favorite: card.metadata.favorite || "",
@@ -326,10 +332,14 @@ export function BusinessCardForm({
       if (userAlreadyExists) {
         navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
       } else {
-        navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
-        setTimeout(() => {
-          window.location.href = `/dashboard/cards?selectedTab=${selectedTab}`;
-        }, 300);
+        if (selectedTab == "local") {
+          navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
+          setTimeout(() => {
+            window.location.href = `/dashboard/cards?selectedTab=${selectedTab}`;
+          }, 300);
+        } else {
+          navigate(`/dashboard/cards?selectedTab=${selectedTab}`);
+        }
       }
     }
   };

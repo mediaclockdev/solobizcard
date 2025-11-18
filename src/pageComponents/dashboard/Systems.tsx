@@ -26,10 +26,10 @@ import {
   CardClassicTemplateUpload,
   CardTraditionalTemplateUpload,
   SoloCardsSiteMap,
-  // ActivationRequests,
-  // ApprovedUsersList,
-  // PaymentDueUsersList,
-  // PaymentDueSummary,
+  ActivationRequests,
+  ApprovedUsersList,
+  PaymentDueUsersList,
+  PaymentDueSummary,
 } from "@/components/dashboard/systems";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "@/services/firebase";
@@ -439,13 +439,13 @@ export default function Systems() {
         />
       </div>
 
-      {/* <ActivationRequests />
+      <ActivationRequests />
       <ApprovedUsersList />
       <PaymentDueSummary
         setLoadDataLoading={setLoadDataLoading}
         loadDataLoading={loadDataLoading}
       />
-      <PaymentDueUsersList
+      {/* <PaymentDueUsersList
         setLoadDataLoading={setLoadDataLoading}
         loadDataLoading={loadDataLoading}
       /> */}

@@ -92,6 +92,47 @@ export function BusinessCardPreview({
   // console.log("carddd==",card.appointments);
   const [key, setKey] = useState(0);
 
+  const formatPhone = (phone: string) => {
+    if (!phone) return "";
+
+    // Remove spaces and non-digits except leading +
+    let cleaned = phone.replace(/(?!^\+)\D/g, "");
+
+    // Extract country code (starts with +)
+    const countryMatch = cleaned.match(/^\+\d{1,3}/);
+    const countryCode = countryMatch ? countryMatch[0] : "";
+    let number = cleaned.replace(countryCode, "");
+
+    // INDIA FORMAT (+91)
+    if (countryCode === "+91") {
+      // 10-digit number: 8469357938 → 84693 57938
+      if (number.length === 10) {
+        return `${countryCode} ${number.slice(0, 5)} ${number.slice(5)}`;
+      }
+    }
+
+    // USA FORMAT (+1)
+    if (countryCode === "+1") {
+      // 10-digit: 1515151515 → +1 (151) 515-1515
+      if (number.length === 10) {
+        return `${countryCode} (${number.slice(0, 3)}) ${number.slice(
+          3,
+          6
+        )}-${number.slice(6)}`;
+      }
+    }
+
+    // Default fallback (group into 3-3-4)
+    if (number.length > 6) {
+      return `${countryCode} ${number.slice(0, 3)} ${number.slice(
+        3,
+        6
+      )}-${number.slice(6)}`;
+    }
+
+    return phone; // return as-is if unknown
+  };
+
   const fetchImage = async () => {
     try {
       const docRef = doc(db, "cardPreviews", CARD_DOC_ID);
@@ -139,7 +180,6 @@ export function BusinessCardPreview({
 
   useEffect(() => {
     setKey((prev) => prev + 1);
-    console.log("cardss==", card);
   }, [card]);
   useEffect(() => {
     fetchImage();
@@ -166,7 +206,6 @@ export function BusinessCardPreview({
   );
 
   useEffect(() => {
-    console.log("isCreateMode", isCreateMode);
     if (typeof window !== "undefined") {
       setSanitizedBio(DOMPurify.sanitize(card.about.bio ?? ""));
     }
@@ -808,8 +847,11 @@ export function BusinessCardPreview({
                     <Phone size={24} />
                   </div>
                   <div className="flex flex-col relative">
-                    <span className="text-card-foreground font-bold group-hover:text-[var(--hover-color)] transition-colors break-all">
+                    {/* <span className="text-card-foreground font-bold group-hover:text-[var(--hover-color)] transition-colors break-all">
                       {card.business.phone}
+                    </span> */}
+                    <span className="text-card-foreground font-bold group-hover:text-[var(--hover-color)] transition-colors break-all">
+                      {formatPhone(card.business.phone)}
                     </span>
                     <span className="text-sm text-muted-foreground">Phone</span>
                   </div>

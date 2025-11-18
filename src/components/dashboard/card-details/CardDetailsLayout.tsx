@@ -41,7 +41,6 @@ export default function CardDetailsLayout() {
       if (cardId) {
         const cards = loadBusinessCards();
         const filtered = cards.filter((c) => c.metadata.id == cardId);
-        console.log("filtered", filtered);
         if (filtered?.length > 0) {
           console.log("cardId=12212=", cardId);
           setIsLoading(true);
@@ -54,7 +53,6 @@ export default function CardDetailsLayout() {
 
         // }
         else {
-          console.log("cardId==", cardId);
           const cardsRef = collection(db, "cards");
           const q = query(cardsRef, where("metadata.id", "==", cardId));
           const querySnapshot = await getDocs(q);

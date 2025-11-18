@@ -38,7 +38,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "src/app/api/send-payment-email/route.ts"  ],
   "exclude": [
     "node_modules"
   ]

@@ -15,7 +15,7 @@ import SignInModal from "@/components/SignInModal";
 import SignUpModal from "@/components/SignUpModal";
 import ForgotPasswordModal from "@/components/ForgotPasswordModal";
 import ResetPasswordModal from "@/components/ResetPasswordModal";
-
+import { Logo } from "@/components/ui/Logo";
 import { useSearchParams } from "next/navigation";
 
 export default function Onboarding() {
@@ -96,7 +96,10 @@ export default function Onboarding() {
       <Header onShowSignIn={() => setIsSignInOpen(true)} />
       {/* ✅ Added Header with sign in trigger */}
       <main className="flex-1 p-4 sm:p-6">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto relative">
+          <div className="absolute top-0 right-0 z-10">
+            <Logo size="sm" />
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
             {/* Form Section */}
             <div>

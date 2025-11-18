@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 export function BusinessForm({ card, onUpdate }: FormComponentProps) {
   const [activeTab, setActiveTab] = React.useState<"manual" | "upload">(
@@ -26,6 +28,12 @@ export function BusinessForm({ card, onUpdate }: FormComponentProps) {
     }
     current[keys[keys.length - 1]] = value;
 
+    onUpdate(updatedCard);
+  };
+
+  const handlePhoneChange = (value: string) => {
+    const updatedCard = { ...card };
+    updatedCard.business.phone = "+" + value; // ensures +XX format
     onUpdate(updatedCard);
   };
 
@@ -312,7 +320,7 @@ export function BusinessForm({ card, onUpdate }: FormComponentProps) {
             </div>
 
             {/* Phone Number */}
-            <div className="space-y-2 mb-2">
+            {/* <div className="space-y-2 mb-2">
               <Label htmlFor="phone" className="text-sm font-medium">
                 Phone Number{" "}
                 <span className="text-muted-foreground">Optional</span>
@@ -331,7 +339,33 @@ export function BusinessForm({ card, onUpdate }: FormComponentProps) {
             </div>
             <p className="text-xs text-muted-foreground mb-4">
               Format: (XXX) XXX-XXXX or +X (XXX) XXX-XXXX
-            </p>
+            </p> */}
+            <div className="space-y-2 mb-2">
+              <Label htmlFor="phone" className="text-sm font-medium">
+                Phone Number{" "}
+                <span className="text-muted-foreground">
+                  (with country code)
+                </span>
+              </Label>
+
+              <PhoneInput
+                country={"us"} // default country
+                value={card.business.phone}
+                onChange={handlePhoneChange}
+                inputStyle={{
+                  width: "100%",
+                  height: "42px",
+                  fontSize: "14px",
+                  backgroundColor: "#f5f7f9",
+                  borderWidth: "1px",
+                  borderColor: "#e2e8f0",
+                }}
+                containerStyle={{
+                  width: "100%",
+                }}
+                countryCodeEditable={false}
+              />
+            </div>
 
             {/* Email Address */}
             <div className="space-y-2 mb-4">
