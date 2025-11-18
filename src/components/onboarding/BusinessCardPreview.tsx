@@ -236,7 +236,7 @@ export function BusinessCardPreview({
         className={
           card.cardLayout.toLowerCase() === "portrait"
             ? "relative h-[30rem] sm:h-[30rem]"
-            : "relative h-[270px]"
+            : "relative sm:h-[270px] h-auto"
         }
         key={key}
         style={{ backgroundColor: `${card.brandColor}80` || "#4299e1" }}
