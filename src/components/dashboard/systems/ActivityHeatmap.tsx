@@ -59,17 +59,18 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ user }) => {
         if (snapshot.empty) return;
 
         const combined: Record<string, DayActivity> = {};
+        let totalActivity = 0;
 
         snapshot.forEach((docSnap) => {
           const data = docSnap.data();
-          const totalCount =
+          const cardTotal =
             Number(data.cardView) +
             Number(data.cardShare) +
             Number(data.leadsGenerated) +
             Number(data.linkClick) +
             Number(data.adsView) +
             Number(data.saveContact);
-            setcardActivity(totalCount);
+          totalActivity += cardTotal;
 
           const maps = {
             views: data.cardViewsByDay || {},
@@ -132,7 +133,7 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ user }) => {
             );
           });
         });
-
+        setcardActivity(totalActivity);
         setFirebaseData(combined);
       } catch (err) {
         console.error("Error loading activity:", err);
@@ -291,7 +292,8 @@ export const ActivityHeatmap: React.FC<ActivityHeatmapProps> = ({ user }) => {
           <div>
             <CardTitle>Activity Overview</CardTitle>
             <CardDescription>
-              {cardActivity} Combined activity from {cardCount} cards in {selectedYear}
+              {cardActivity} Combined activity from {cardCount} cards in{" "}
+              {selectedYear}
             </CardDescription>
           </div>
 

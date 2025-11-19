@@ -222,6 +222,37 @@ export function CardEditForm({ card, onUpdate }: CardEditFormProps) {
         where("metadata.id", "==", card.metadata.id)
       );
 
+      const formatPhone = (phone: string) => {
+        if (!phone) return "";
+
+        // If already formatted like phone intent → return as-is
+        const pattern = /^\+\d{1,3}\s?\(\d{3}\)\s?\d{3}-\d{4}$/;
+        if (pattern.test(phone)) return phone;
+
+        // Clean digits but keep leading +
+        const cleaned = phone.replace(/(?!^\+)\D/g, "");
+
+        // Extract country code (1–3 digits)
+        const match = cleaned.match(/^\+(\d{1,3})/);
+
+        if (!match) return phone;
+
+        const countryCode = match[0]; // "+1"
+        const codeDigits = match[1]; // "1"
+        const number = cleaned.slice(countryCode.length); // remaining digits
+
+        // USA / Canada
+        if (codeDigits === "1" && number.length === 10) {
+          return `${countryCode} (${number.slice(0, 3)}) ${number.slice(
+            3,
+            6
+          )}-${number.slice(6)}`;
+        }
+
+        // Default fallback → group 3-3-3-...
+        return `${countryCode} ${number.replace(/(\d{3})(?=\d)/g, "$1 ")}`;
+      };
+
       getDocs(q)
         .then((querySnapshot) => {
           if (querySnapshot.empty) {
@@ -251,7 +282,7 @@ export function CardEditForm({ card, onUpdate }: CardEditFormProps) {
                 companySlogan: card?.profile?.companySlogan || "",
               },
               business: {
-                phone: card?.business?.phone || "",
+                phone: formatPhone(card?.business?.phone) || "",
                 email: card?.business?.email || "",
                 website: card?.business?.website || "",
                 address: {

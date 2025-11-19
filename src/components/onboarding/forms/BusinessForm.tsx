@@ -31,9 +31,56 @@ export function BusinessForm({ card, onUpdate }: FormComponentProps) {
     onUpdate(updatedCard);
   };
 
+  const formatPhone = (phone: string) => {
+    if (!phone) return "";
+
+    // Clean input (keep +)
+    const cleaned = phone.replace(/(?!^\+)\D/g, "");
+
+    // Remove "+"
+    const digits = cleaned.replace("+", "");
+
+    // Known country codes
+    const knownCodes = ["1", "91"];
+
+    let countryCode = "";
+    let rest = "";
+
+    // Try to match known country codes first
+    for (const code of knownCodes) {
+      if (digits.startsWith(code)) {
+        countryCode = code;
+        rest = digits.slice(code.length);
+        break;
+      }
+    }
+
+    // If not matched → fallback to first 1–3 digits as country code
+    if (!countryCode) {
+      countryCode = digits.slice(0, 3);
+      rest = digits.slice(3);
+    }
+
+    // --- USA/Canada format ---
+    if (countryCode === "1" && rest.length === 10) {
+      return `+1 (${rest.slice(0, 3)}) ${rest.slice(3, 6)}-${rest.slice(6)}`;
+    }
+
+    // --- India format ---
+    if (countryCode === "91" && rest.length === 10) {
+      return `+91 ${rest.slice(0, 5)} ${rest.slice(5)}`;
+    }
+
+    // --- Default fallback: group 3-3-3 ---
+    return `+${countryCode} ${rest.replace(/(\d{3})(?=\d)/g, "$1 ")}`;
+  };
+
   const handlePhoneChange = (value: string) => {
+    const raw = "+" + value.replace(/\D/g, "");
+    const formatted = formatPhone(raw); // apply proper format
+
     const updatedCard = { ...card };
-    updatedCard.business.phone = "+" + value; // ensures +XX format
+    updatedCard.business.phone = formatted;
     onUpdate(updatedCard);
   };
 

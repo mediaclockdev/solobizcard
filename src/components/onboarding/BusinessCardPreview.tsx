@@ -92,46 +92,38 @@ export function BusinessCardPreview({
   // console.log("carddd==",card.appointments);
   const [key, setKey] = useState(0);
 
-  const formatPhone = (phone: string) => {
-    if (!phone) return "";
+const formatPhone = (phone: string) => {
+  if (!phone) return "";
 
-    // Remove spaces and non-digits except leading +
-    let cleaned = phone.replace(/(?!^\+)\D/g, "");
+  // If already formatted like phone intent → return as-is
+  const pattern = /^\+\d{1,3}\s?\(\d{3}\)\s?\d{3}-\d{4}$/;
+  if (pattern.test(phone)) return phone;
 
-    // Extract country code (starts with +)
-    const countryMatch = cleaned.match(/^\+\d{1,3}/);
-    const countryCode = countryMatch ? countryMatch[0] : "";
-    let number = cleaned.replace(countryCode, "");
+  // Clean digits but keep leading +
+  const cleaned = phone.replace(/(?!^\+)\D/g, "");
 
-    // INDIA FORMAT (+91)
-    if (countryCode === "+91") {
-      // 10-digit number: 8469357938 → 84693 57938
-      if (number.length === 10) {
-        return `${countryCode} ${number.slice(0, 5)} ${number.slice(5)}`;
-      }
-    }
+  // Extract country code (1–3 digits)
+  const match = cleaned.match(/^\+(\d{1,3})/);
 
-    // USA FORMAT (+1)
-    if (countryCode === "+1") {
-      // 10-digit: 1515151515 → +1 (151) 515-1515
-      if (number.length === 10) {
-        return `${countryCode} (${number.slice(0, 3)}) ${number.slice(
-          3,
-          6
-        )}-${number.slice(6)}`;
-      }
-    }
+  if (!match) return phone;
 
-    // Default fallback (group into 3-3-4)
-    if (number.length > 6) {
-      return `${countryCode} ${number.slice(0, 3)} ${number.slice(
-        3,
-        6
-      )}-${number.slice(6)}`;
-    }
+  const countryCode = match[0];       // "+1"
+  const codeDigits = match[1];        // "1"
+  const number = cleaned.slice(countryCode.length); // remaining digits
 
-    return phone; // return as-is if unknown
-  };
+  // USA / Canada
+  if (codeDigits === "1" && number.length === 10) {
+    return `${countryCode} (${number.slice(0, 3)}) ${number.slice(
+      3,
+      6
+    )}-${number.slice(6)}`;
+  }
+
+  // Default fallback → group 3-3-3-...
+  return `${countryCode} ${number.replace(/(\d{3})(?=\d)/g, "$1 ")}`;
+};
+
+
 
   const fetchImage = async () => {
     try {
