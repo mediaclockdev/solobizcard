@@ -27,7 +27,11 @@ export function ProfileForm({
         onUpdate={onUpdate}
         isEditMode={isEditMode}
       />
-      <CardVisibilitySection card={card} onUpdate={onUpdate} />
+      <CardVisibilitySection
+        card={card}
+        onUpdate={onUpdate}
+        selectedTab={selectedTab}
+      />
       <BrandColorSection card={card} onUpdate={onUpdate} />
     </div>
   );

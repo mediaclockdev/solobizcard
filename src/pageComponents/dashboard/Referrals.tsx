@@ -82,6 +82,7 @@ export default function Referrals() {
   const day = date.getDate();
   const [parentCount, setParentCount] = useState(0);
   const [childCount, setChildCount] = useState(0);
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
 
   const getDaySuffix = (d: number) => {
     if (d > 3 && d < 21) return "th";
@@ -146,6 +147,12 @@ export default function Referrals() {
   const [l6Multiplier, setL6Multiplier] = useState(0);
   const [hasFetchedSettings, setHasFetchedSettings] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  const [privateCardMessage, setPrivateCardMessage] =
+    useState<string>("Private Card");
+  const [privateCardSubMessage, setPrivateCardSubMessage] = useState<string>(
+    "Oops! This card is private. You don’t have permission to view it."
+  );
 
   async function countParents(userId: string) {
     const userRef = doc(db, "referrals", userId);
@@ -1232,8 +1239,22 @@ export default function Referrals() {
                               "rgba(100, 100, 111, 0.2) 0px 7px 29px 0px",
                           }}
                           onClick={() => {
-                            referral?.latestCardId &&
-                              navigate("/card/" + referral?.latestCardId);
+                            if (!referral?.latestCardId) {
+                              setPrivateCardMessage("No card found...");
+                              setPrivateCardSubMessage(
+                                "Looks like you haven’t created a card yet!"
+                              );
+                              setShowLoginAlert(true);
+                            } else if (referral?.isPublic) {
+                              setPrivateCardMessage("Private Card");
+                              setPrivateCardSubMessage(
+                                "Oops! This card is private. You don’t have permission to view it."
+                              );
+                              setShowLoginAlert(true);
+                            } else {
+                              referral?.latestCardId &&
+                                navigate("/card/" + referral?.latestCardId);
+                            }
                           }}
                         >
                           <AvatarImage
@@ -1560,6 +1581,57 @@ export default function Referrals() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {showLoginAlert && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 !mt-0">
+          {/* === Background Overlay (dark + blur) === */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+
+          {/* === Modal Box === */}
+          <div className="relative bg-white backdrop-blur-md border border-white/20 rounded-2xl shadow-2xl p-8 z-50 w-full max-w-md text-center transition-all duration-300">
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-7 h-7"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12A9 9 0 113 12a9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Title */}
+            <h2 className="text-2xl font-semibold text-gray-900 mb-3">
+              {privateCardMessage}
+            </h2>
+
+            {/* Message */}
+            <p className="text-gray-700 mb-8 leading-relaxed">
+              {privateCardSubMessage}
+            </p>
+
+            {/* Actions */}
+            <div className="flex justify-center gap-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowLoginAlert(false)}
+                className="px-6 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

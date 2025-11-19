@@ -41,7 +41,7 @@ export async function POST(req) {
     // Email HTML template
     const htmlTemplate = `
       <div style="font-family: Arial, sans-serif; color: #333;">
-        <h2 style="color:#2563eb;">Support Request From ${action} Page</h2>
+        <h2 style="color:#2563eb;">${action} Page Message </h2>
         <p><strong>User Name:</strong> ${userName}</p>
         <p><strong>User Email:</strong> ${userEmail}</p>
         ${subject ? `<p><strong>Subject:</strong> ${subject}</p>` : ""}

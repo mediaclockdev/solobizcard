@@ -89,8 +89,8 @@ export default function Cards() {
     const cardsRef = collection(db, "cards");
     const q = query(
       cardsRef,
-      where("uid", "==", user?.uid),
-      where("isActive", "==", true)
+      where("uid", "==", user?.uid)
+     // where("isActive", "==", true)
     );
     const querySnapshot = await getDocs(q);
     const userCards: BusinessCard[] = querySnapshot.docs.map((doc) => ({

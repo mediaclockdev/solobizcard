@@ -269,7 +269,7 @@ export function BusinessCardForm({
         await setDoc(doc(db, "cards", card.urlName), {
           profilePhoto: newURL,
           uid: user.uid,
-          isActive: true,
+          isActive: false,
           urlName: card.urlName,
           brandColor: card.brandColor,
           templateType: card.templateType,
@@ -340,7 +340,7 @@ export function BusinessCardForm({
           metadata: {
             id: card.metadata.id || "",
             favorite: card.metadata.favorite || "",
-            isPublic: card.metadata.isPublic || "",
+            isPublic: true,
             createdAt: card.metadata.createdAt || "",
             slug: card.metadata.slug || "",
             tags: card.metadata.tags || [],

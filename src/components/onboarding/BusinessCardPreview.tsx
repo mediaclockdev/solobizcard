@@ -485,7 +485,7 @@ const formatPhone = (phone: string) => {
               </p>
             </div>
             {card.profile.companySlogan && (
-              <p className="text-muted-foreground italic mt-3 break-all">
+              <p className="text-muted-foreground italic mt-3 break-words">
                 "{card.profile.companySlogan}"
               </p>
             )}

@@ -40,8 +40,8 @@ export default function MembersDirectory() {
       const cardsRef = collection(db, "cards");
       const q = query(
         cardsRef,
-        where("metadata.isPublic", "==", true),
-        where("isActive", "==", true)
+        where("metadata.isPublic", "==", true)
+        // where("isActive", "==", true)
       );
 
       const querySnapshot = await getDocs(q);

@@ -63,7 +63,7 @@ export async function POST(req) {
                 </tr>
                 <tr>
                   <td style="padding:8px 0; font-size:16px;">Amount:</td>
-                  <td style="padding:8px 0; font-size:16px; color:#10b981;"><strong>₹${amount}</strong></td>
+                  <td style="padding:8px 0; font-size:16px; color:#10b981;"><strong>$${amount}</strong></td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0; font-size:16px;">Status:</td>
@@ -123,7 +123,7 @@ export async function POST(req) {
                 </tr>
                 <tr>
                   <td style="padding:8px 0; font-size:16px;">Amount:</td>
-                  <td style="padding:8px 0; font-size:16px; color:#10b981;"><strong>₹${amount}</strong></td>
+                  <td style="padding:8px 0; font-size:16px; color:#10b981;"><strong>$${amount}</strong></td>
                 </tr>
                 <tr>
                   <td style="padding:8px 0; font-size:16px;">Status:</td>

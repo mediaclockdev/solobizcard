@@ -162,7 +162,7 @@ export const createInitialCard = (): BusinessCard => ({
   metadata: {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
-    isPublic: false,
+    isPublic: true,
     slug: "",
     favorite: false,
     tags: [],

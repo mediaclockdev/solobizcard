@@ -79,6 +79,7 @@ export function AboutForm({
       document.body.classList.remove("overflow-hidden");
     }
   }, [showWarning]);
+
   useEffect(() => {
     if (isProLocked) {
       handleSectionTypeChange("aboutMe");
