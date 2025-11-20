@@ -581,8 +581,6 @@ export default function Settings() {
       30
     : false;
 
-  console.log("isWithin30Days", isWithin30Days);
-
   useEffect(() => {
     if (!planEndDate) return;
     const endDate = planEndDate.toDate

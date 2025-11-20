@@ -66,7 +66,6 @@ export function YourEarnings() {
       }
       setTotalEarnings(totalAmount);
       // setTotalEarnings(totalAmount);
-      console.log("totalAmount", totalAmount);
     }
   };
 

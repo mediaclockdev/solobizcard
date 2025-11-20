@@ -53,14 +53,12 @@ export function ReferralsLevels() {
       setParentCount(parents);
       setChildCount(children);
     }
+
     const fetchSettings = async () => {
       try {
         const userId = user?.uid;
         if (!userId) return;
 
-        //   console.log("=== FETCHING REFERRAL SETTINGS ===");
-
-        // --- Fetch referral settings ---
         const settingsRef = doc(db, "users", userId);
         const settingsSnap = await getDoc(settingsRef);
         if (!settingsSnap.exists()) return;
@@ -78,7 +76,6 @@ export function ReferralsLevels() {
 
         const MNR = settings.l2Child;
         setMNR?.(MNR);
-        //    console.log("Minimum Number of Referrals (MNR):", MNR);
 
         // --- Fetch user data ---
         const userRef = doc(db, "referrals", userId);
@@ -88,7 +85,6 @@ export function ReferralsLevels() {
 
         const children = userData.children || [];
         const RCA = children.length;
-        //     console.log("Direct children (RCA):", RCA);
 
         let childrenReachedLevel2 = 0;
         let totalGrandChildrenFromLevel2 = 0;
@@ -101,7 +97,6 @@ export function ReferralsLevels() {
           const childSnap = await getDoc(childRef);
 
           if (!childSnap.exists()) {
-            //  console.log(`Child ID ${childId} not found`);
             continue;
           }
 
@@ -112,38 +107,18 @@ export function ReferralsLevels() {
 
           totalGrandChildrenAll += childRCA;
 
-          // console.log(`Child ID: ${childId}`);
-          // console.log("  - Child Level:", childLevel);
-          // console.log("  - Child Direct Children (childRCA):", childRCA);
-
           if (childRCA >= MNR || childLevel >= 2) {
             childrenReachedLevel2++;
             totalGrandChildrenFromLevel2 += childRCA;
-            //  console.log("  -> counts as Level-2 child");
           } else {
             const deficit = Math.max(0, MNR - childRCA);
             nonLevel2Deficits.push(deficit);
-            // console.log(
-            //   "  -> NOT Level-2 yet, deficit to reach Level-2:",
-            //   deficit
-            // );
           }
 
           if (childLevel >= 3) {
             level3Count++;
           }
         }
-
-        // console.log(
-        //   "Total grandchildren (all children):",
-        //   totalGrandChildrenAll
-        // );
-        // console.log(
-        //   "Total grandchildren (from Level-2 children):",
-        //   totalGrandChildrenFromLevel2
-        // );
-        // console.log("Total Level-2 children (RLA):", childrenReachedLevel2);
-        // console.log("Total Level-3 children:", level3Count);
 
         const missingLevel2Children = Math.max(0, MNR - childrenReachedLevel2);
 
@@ -171,21 +146,6 @@ export function ReferralsLevels() {
         let levelPercentage = RCA ? (childrenReachedLevel2 * 100) / RCA : 0;
         setLevelUpPercentage(Number(levelPercentage));
 
-        // console.log("Missing Level-2 children (count):", missingLevel2Children);
-        // console.log("Deficits list (non-Level2 children):", nonLevel2Deficits);
-        // console.log(
-        //   "Remaining grandchildren required to get MNR Level-2 children:",
-        //   remainingGrandChildren
-        // );
-        // console.log(
-        //   "Children remaining to reach Level-2:",
-        //   childrenRemainingLevel2
-        // );
-        // console.log(
-        //   "RemainingPoints (children required to reach Level-2):",
-        //   remainingPoints
-        // );
-
         let userLevelStr = 1;
         let memberLevel = "Starter";
         let requiredChildrenToNext = 0;
@@ -200,16 +160,11 @@ export function ReferralsLevels() {
           nextLevelName = "Level-Up";
           remainingPoints = 0;
         } else if (childrenReachedLevel2 < MNR) {
-          //console.log("childrenReachedLevel2=", childrenReachedLevel2);
           userLevelStr = childrenReachedLevel2;
           memberLevel = "Level-Up";
           requiredChildrenToNext = childrenRemainingLevel2;
           requiredGrandChildrenToNext = remainingGrandChildren;
-          // remainingPoints=0;
           nextLevelName = "Bronze";
-          // await updateDoc(userRef, {
-          //   Level: 2,
-          // });
         } else if (
           childrenReachedLevel2 < MNR ||
           (childrenReachedLevel2 >= MNR &&
@@ -223,9 +178,6 @@ export function ReferralsLevels() {
             MNR * MNR - totalGrandChildrenFromLevel2
           );
           nextLevelName = "Bronze";
-          // await updateDoc(userRef, {
-          //   Level: 2,
-          // });
         } else if (
           childrenReachedLevel2 >= MNR &&
           totalGrandChildrenFromLevel2 >= MNR * MNR &&
@@ -236,9 +188,6 @@ export function ReferralsLevels() {
           requiredChildrenToNext = Math.max(0, 2 * MNR - level3Count);
           requiredGrandChildrenToNext = 0;
           nextLevelName = "Silver";
-          // await updateDoc(userRef, {
-          //   Level: 3,
-          // });
         } else if (
           totalGrandChildrenFromLevel2 <
           settings.l4Multiplier * (MNR * MNR)
@@ -251,10 +200,7 @@ export function ReferralsLevels() {
             settings.l4Multiplier * (MNR * MNR) - totalGrandChildrenFromLevel2
           );
           nextLevelName = "Silver Earner";
-          // await updateDoc(userRef, { Level: 3 });
-        }
-        // Level 5 → Gold Earner (L5-multiplier × L3 grandchildren)
-        else if (
+        } else if (
           totalGrandChildrenFromLevel2 <
           settings.l5Multiplier * (MNR * MNR)
         ) {
@@ -266,10 +212,7 @@ export function ReferralsLevels() {
             settings.l5Multiplier * (MNR * MNR) - totalGrandChildrenFromLevel2
           );
           nextLevelName = "Gold Earner";
-          // await updateDoc(userRef, { Level: 4 });
-        }
-        // Level 6 → Platinum Earner (L6-multiplier × L3 grandchildren)
-        else if (
+        } else if (
           totalGrandChildrenFromLevel2 <
           settings.l6Multiplier * (MNR * MNR)
         ) {
@@ -281,52 +224,19 @@ export function ReferralsLevels() {
             settings.l6Multiplier * (MNR * MNR) - totalGrandChildrenFromLevel2
           );
           nextLevelName = "Platinum Earner";
-          // await updateDoc(userRef, { Level: 5 });
         } else {
           userLevelStr = 6;
           memberLevel = "Platinum";
           requiredChildrenToNext = 0;
           requiredGrandChildrenToNext = 0;
           nextLevelName = "Max Level";
-          // await updateDoc(userRef, {
-          //   Level: 6,
-          // });
         }
-
-        // console.log("=== LEVEL RESULT ===");
-        // console.log("User Level (label):", userLevelStr);
-        // console.log("Member Level:", memberLevel);
-        // console.log("Next Level:", nextLevelName);
-        // console.log("Children reached Level-2 (RLA):", childrenReachedLevel2);
-        // console.log(
-        //   "Children remaining to reach Level-2:",
-        //   childrenRemainingLevel2
-        // );
-        // console.log(
-        //   "Total grandchildren (all children):",
-        //   totalGrandChildrenAll
-        // );
-        // console.log(
-        //   "Total grandchildren (from Level-2 children):",
-        //   totalGrandChildrenFromLevel2
-        // );
-        // console.log(
-        //   "Remaining grandchildren required to form MNR Level-2 children:",
-        //   remainingGrandChildren
-        // );
-        // console.log(
-        //   "Remaining points (children still to reach Level-2):",
-        //   remainingPoints
-        // );
-
         setLevel?.(childrenReachedLevel2);
         setMemberLevel?.(memberLevel);
         setCurrentChildren?.(RCA);
         setCurrentGrandChildren?.(totalGrandChildrenAll);
         setRemainingChildren?.(requiredChildrenToNext);
         setRemainingGrandChildren?.(requiredGrandChildrenToNext);
-        // setChildrenReachedLevel2?.(childrenReachedLevel2);
-        // setChildrenRemainingLevel2?.(childrenRemainingLevel2);
         setNextLevelNeed?.(remainingPoints);
       } catch (err) {
         console.error("Error fetching referral settings:", err);
@@ -337,7 +247,7 @@ export function ReferralsLevels() {
       fetchCounts();
       fetchSettings();
     }
-  }, [user, MNR]);
+  }, [MNR]);
 
   const referralData = [
     {

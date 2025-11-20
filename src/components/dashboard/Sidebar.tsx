@@ -153,10 +153,10 @@ export function Sidebar({
       className={cn(
         "h-screen bg-sidebar fixed left-0 top-0 z-20 flex flex-col transition-all duration-300 ease-in-out group",
         // Desktop styles
-        "md:w-65 md:translate-x-0",
+        "md:w-64 md:translate-x-0",
         collapsed && "md:w-20",
         // Mobile styles
-        "w-65 -translate-x-full",
+        "w-64 -translate-x-full",
         mobileOpen && "translate-x-0"
       )}
     >

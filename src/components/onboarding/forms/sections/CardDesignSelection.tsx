@@ -72,7 +72,7 @@ export function CardDesignSelection({
                     {/* Circle left */}
                     <div className="absolute bottom-0 left-3 translate-y-[38%]">
                       <div
-                        className="w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid #FFF`,
                           backgroundColor: `${card.brandColor}90`,
@@ -249,7 +249,7 @@ export function CardDesignSelection({
                     {/* Circle right */}
                     <div className="absolute bottom-0 right-3 translate-y-[38%]">
                       <div
-                        className="w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid #FFF`,
                           backgroundColor: `${card.brandColor}90`,
@@ -424,7 +424,7 @@ export function CardDesignSelection({
                       style={{ right: 50 }}
                     >
                       <div
-                        className="w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid #FFF`,
                           backgroundColor: `${card.brandColor}90`,
@@ -754,7 +754,7 @@ export function CardDesignSelection({
                     {/* Circle right */}
                     <div className="absolute bottom-0 right-3 translate-y-[38%]">
                       <div
-                        className="w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid ${card.brandColor}`,
                           backgroundColor: `${card.brandColor}80`,
@@ -930,7 +930,7 @@ export function CardDesignSelection({
                     {/* Circle left */}
                     <div className="absolute bottom-0 left-3 translate-y-[38%]">
                       <div
-                        className="w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid ${card.brandColor}`,
                           backgroundColor: `${card.brandColor}80`,
@@ -1233,7 +1233,7 @@ export function CardDesignSelection({
                     {/* Circle right */}
                     <div className="absolute bottom-0 right-3 translate-y-[38%]">
                       <div
-                        className="w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid ${card.brandColor}`,
                           backgroundColor: `${card.brandColor}80`,

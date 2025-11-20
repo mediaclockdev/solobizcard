@@ -104,7 +104,7 @@ const Earnings = () => {
 
   const [monetizationStatus, setMonetizationStatus] = useState<
     "not_monetized" | "eligible" | "active"
-  >();
+  >("not_monetized");
 
   const [hasPending, setHasPending] = useState(false);
   const [eligibleSince, setEligibleSince] = useState<string>("");
