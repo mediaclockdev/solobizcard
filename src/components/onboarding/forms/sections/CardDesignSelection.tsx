@@ -72,7 +72,7 @@ export function CardDesignSelection({
                     {/* Circle left */}
                     <div className="absolute bottom-0 left-3 translate-y-[38%]">
                       <div
-                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-20 sm:w-16 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid #FFF`,
                           backgroundColor: `${card.brandColor}90`,
@@ -249,7 +249,7 @@ export function CardDesignSelection({
                     {/* Circle right */}
                     <div className="absolute bottom-0 right-3 translate-y-[38%]">
                       <div
-                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-20 sm:w-16 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid #FFF`,
                           backgroundColor: `${card.brandColor}90`,
@@ -424,7 +424,7 @@ export function CardDesignSelection({
                       style={{ right: 50 }}
                     >
                       <div
-                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-20 sm:w-16 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid #FFF`,
                           backgroundColor: `${card.brandColor}90`,
@@ -743,18 +743,27 @@ export function CardDesignSelection({
                 </p>
                 <div className="card-container rounded-xl overflow-hidden shadow-2xl bg-white relative cursor-not-allowed">
                   <div className="relative w-full aspect-[4/3]">
-                    <div
+                    {/* <div
                       className="w-full h-full"
                       style={{
                         borderBottom: `6px solid ${card.brandColor}`,
                         backgroundColor: `${card.brandColor}80`,
                       }}
-                    ></div>
+                    ></div> */}
+                    <div
+                      className="w-full h-full border-b-[15px] md:border-b-[6px] border-b-[var(--brand)] bg-[color:var(--back)]"
+                      style={
+                        {
+                          ["--brand"]: card.brandColor,
+                          ["--back"]: `${card.brandColor}80`,
+                        } as React.CSSProperties
+                      }
+                    />
                     <div className="absolute top-3 left-3 w-1/4 aspect-video rounded-lg bg-gray-200"></div>
                     {/* Circle right */}
                     <div className="absolute bottom-0 right-3 translate-y-[38%]">
                       <div
-                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-20 sm:w-16 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid ${card.brandColor}`,
                           backgroundColor: `${card.brandColor}80`,
@@ -807,7 +816,6 @@ export function CardDesignSelection({
         <div
           onClick={() => {
             !isDisabled && onUpdate({ ...card, cardLayout: "align-right" });
-            console.log("hgihi");
           }}
           className={`cursor-pointer shrink-0 w-[200px] transition-all duration-300 
             ${
@@ -919,18 +927,27 @@ export function CardDesignSelection({
                 </p>
                 <div className="card-container rounded-xl overflow-hidden shadow-2xl bg-white relative cursor-not-allowed">
                   <div className="relative w-full aspect-[4/3]">
-                    <div
+                    {/* <div
                       className="w-full h-full"
                       style={{
                         borderBottom: `6px solid ${card.brandColor}`,
                         backgroundColor: `${card.brandColor}80`,
                       }}
-                    ></div>
+                    ></div> */}
+                    <div
+                      className="w-full h-full border-b-[15px] md:border-b-[6px] border-b-[var(--brand)] bg-[color:var(--back)]"
+                      style={
+                        {
+                          ["--brand"]: card.brandColor,
+                          ["--back"]: `${card.brandColor}80`,
+                        } as React.CSSProperties
+                      }
+                    />
                     <div className="absolute top-3 right-3 w-1/4 aspect-video rounded-lg bg-gray-200"></div>
                     {/* Circle left */}
                     <div className="absolute bottom-0 left-3 translate-y-[38%]">
                       <div
-                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-20 sm:w-16 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid ${card.brandColor}`,
                           backgroundColor: `${card.brandColor}80`,
@@ -1075,12 +1092,21 @@ export function CardDesignSelection({
                 <div className="card-container rounded-xl overflow-hidden shadow-2xl bg-white relative">
                   <div className="relative w-full aspect-[4/3]">
                     <div
+                      className="w-full h-full border-b-[15px] md:border-b-[6px] border-b-[var(--brand)] bg-[color:var(--back)]"
+                      style={
+                        {
+                          ["--brand"]: card.brandColor,
+                          ["--back"]: `${card.brandColor}80`,
+                        } as React.CSSProperties
+                      }
+                    />
+                    {/* <div
                       className="w-full h-full"
                       style={{
                         borderBottom: `6px solid ${card.brandColor}`,
                         backgroundColor: `${card.brandColor}80`,
                       }}
-                    ></div>
+                    ></div> */}
 
                     {/* No circle for portrait */}
                   </div>
@@ -1223,17 +1249,26 @@ export function CardDesignSelection({
                 <div className="card-container rounded-xl overflow-hidden shadow-2xl bg-white relative cursor-not-allowed">
                   <div className="relative w-full aspect-[4/3]">
                     <div
+                      className="w-full h-full border-b-[15px] md:border-b-[6px] border-b-[var(--brand)] bg-[color:var(--back)]"
+                      style={
+                        {
+                          ["--brand"]: card.brandColor,
+                          ["--back"]: `${card.brandColor}80`,
+                        } as React.CSSProperties
+                      }
+                    />
+                    {/* <div
                       className="w-full h-full"
                       style={{
                         borderBottom: `6px solid ${card.brandColor}`,
                         backgroundColor: `${card.brandColor}80`,
                       }}
-                    ></div>
+                    ></div> */}
                     {/* <div className="absolute top-3 left-3 w-1/4 aspect-video rounded-lg bg-gray-200"></div> */}
                     {/* Circle right */}
                     <div className="absolute bottom-0 right-3 translate-y-[38%]">
                       <div
-                        className="w-14 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
+                        className="w-20 sm:w-16 lg:w-7 aspect-square rounded-full relative before:content-[''] before:absolute before:w-full before:h-full before:left-0 before:top-0 before:bg-white before:rounded-full before:-z-10"
                         style={{
                           border: `3px solid ${card.brandColor}`,
                           backgroundColor: `${card.brandColor}80`,
