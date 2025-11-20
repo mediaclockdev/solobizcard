@@ -1242,7 +1242,7 @@ export default function Referrals() {
                             if (!referral?.latestCardId) {
                               setPrivateCardMessage("No card found...");
                               setPrivateCardSubMessage(
-                                "Looks like you haven’t created a card yet!"
+                                "Looks like card not created yet!"
                               );
                               setShowLoginAlert(true);
                             } else if (referral?.isPublic) {
