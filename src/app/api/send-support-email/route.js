@@ -59,7 +59,7 @@ export async function POST(req) {
     await transporter.sendMail({
       from: `"Support Form support@solobizcards.com"`,
       to: process.env.ADMIN_EMAIL,
-      subject: `New Support Issue from ${userName} - ${
+      subject: `${action} Message from ${userName}'s - ${
         subject || "No Subject"
       }`,
       html: htmlTemplate,
