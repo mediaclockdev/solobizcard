@@ -16,7 +16,7 @@ export async function POST(req) {
       userEmail,
       issueDescription,
       subject,
-      action = "support",
+      action = "Support",
     } = await req.json();
 
     // Validate input
@@ -59,7 +59,7 @@ export async function POST(req) {
     await transporter.sendMail({
       from: `"Support Form support@solobizcards.com"`,
       to: process.env.ADMIN_EMAIL,
-      subject: `${action} Message from ${userName}'s - ${
+      subject: `[${action}] Message from ${userName}'s - ${
         subject || "No Subject"
       }`,
       html: htmlTemplate,

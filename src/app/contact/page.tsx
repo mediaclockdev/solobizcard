@@ -45,7 +45,7 @@ export default function ContactUs() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          action: "contact",
+          action: "Contact",
         }),
       });
 
