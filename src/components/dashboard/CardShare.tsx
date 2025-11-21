@@ -375,7 +375,7 @@ export function CardShare({ card, cardId, qrCodeUrl }: CardShareProps) {
                 <div className="inline-block p-4 bg-white rounded-lg border border-gray-100 flex-grow flex items-center justify-center">
                   <img src={qrCodeUrl} alt="QR Code" className="w-32 h-32" />
                 </div>
-                <div className="flex gap-8">
+                <div className="flex flex-col mdlg:flex-col 2xl:flex-row gap-4">
                   <Button
                     variant="outline"
                     className="w-full mt-auto"

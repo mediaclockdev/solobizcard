@@ -13,13 +13,14 @@ export default {
     container: {
       center: true,
       padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
     },
     extend: {
       width: {
         md: "28rem",
+      },
+      screens: {
+        mdlg: "1024px",
+        "2xl": "1400px",
       },
       colors: {
         border: "hsl(var(--border))",
