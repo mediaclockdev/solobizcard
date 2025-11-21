@@ -163,7 +163,7 @@ export default function Support() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="hover:border-gray-400 transition-colors">
           <CardContent className="p-6">
-            <div className="flex justify-between items-start md:flex-col md:gap-3">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">
                   Have a question?
@@ -191,7 +191,7 @@ export default function Support() {
 
         <Card className="hover:border-gray-400 transition-colors">
           <CardContent className="p-6">
-            <div className="flex justify-between items-start md:flex-col md:gap-3">
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
               <div>
                 <h3 className="font-medium text-gray-900 mb-1">
                   Want to get the most out of DigiPro?
